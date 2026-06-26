@@ -27,6 +27,7 @@ export interface IItem extends Document {
   dietaryAttributes: {
     isVegetarian: boolean;
     isVegan: boolean;
+    isNonVeg: boolean;
   };
 }
 
@@ -40,10 +41,14 @@ const itemSchema = new Schema<IItem>(
     dietaryAttributes: {
       isVegetarian: { type: Boolean, default: false },
       isVegan: { type: Boolean, default: false },
+      isNonVeg: { type: Boolean, default: false },
     },
   },
   { timestamps: true }
 );
+
+// Add an index on category to drastically speed up the $lookup join in /menu/full
+itemSchema.index({ category: 1 });
 
 export const Item = mongoose.model<IItem>('Item', itemSchema);
 
@@ -73,12 +78,16 @@ export const Review = mongoose.model<IReview>('Review', reviewSchema);
 export interface ISpecial extends Document {
   item: mongoose.Types.ObjectId;
   date: Date;
+  isActive: boolean;
+  expiresAt?: Date;
 }
 
 const specialSchema = new Schema<ISpecial>(
   {
     item: { type: Schema.Types.ObjectId, ref: 'Item', required: true },
     date: { type: Date, required: true, default: Date.now },
+    isActive: { type: Boolean, default: true },
+    expiresAt: { type: Date },
   },
   { timestamps: true }
 );

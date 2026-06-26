@@ -1,5 +1,6 @@
 import express, { Express, Request, Response } from 'express';
 import cors from 'cors';
+import path from 'path';
 import session from 'express-session';
 import passport from 'passport';
 import { notFound, errorHandler } from './middlewares/errorMiddleware';
@@ -42,6 +43,9 @@ app.use(
 app.use(passport.initialize());
 app.use(passport.session());
 
+
+// Serve uploads statically
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 app.use('/api/v1', buildApiRouter());
 

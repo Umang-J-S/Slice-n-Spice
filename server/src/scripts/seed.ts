@@ -27,12 +27,12 @@ const seedDatabase = async () => {
       { name: 'Pasta & Risotto', displayOrder: 3 },
       { name: 'Desserts', displayOrder: 4 },
       { name: 'Beverages', displayOrder: 5 },
+      { name: 'Meat & Seafood', displayOrder: 6 },
     ];
 
     const createdCategories = await Category.insertMany(categoriesData);
     console.log(`Added ${createdCategories.length} categories.`);
 
-    // Map category names to their new ObjectIds
     const categoryMap: { [key: string]: mongoose.Types.ObjectId } = {};
     createdCategories.forEach((cat) => {
       categoryMap[cat.name] = cat._id as mongoose.Types.ObjectId;
@@ -41,131 +41,141 @@ const seedDatabase = async () => {
     // Create Items
     const itemsData = [
       {
-        title: 'Classic Garlic Bread',
-        description: 'Toasted ciabatta topped with garlic, herb butter, and melted mozzarella.',
-        price: 6.99,
-        photoUrl: 'https://images.unsplash.com/photo-1573140247632-f8fd74997d5c?auto=format&fit=crop&q=80&w=800',
-        category: categoryMap['Starters & Appetizers'],
+        title: "Truffle Mushroom Risotto",
+        price: 24.99,
+        description: "Creamy Carnaroli rice cooked with wild porchini, fresh herbs, and white truffle essence.",
+        photoUrl: "https://images.unsplash.com/photo-1476124369491-e7addf5db371?q=80&w=400&auto=format&fit=crop",
+        category: categoryMap['Pasta & Risotto'],
         dietaryAttributes: { isVegetarian: true, isVegan: false },
       },
       {
-        title: 'Tomato Basil Bruschetta',
-        description: 'Fresh diced tomatoes, basil, garlic, and olive oil on toasted rustic bread.',
-        price: 8.50,
-        photoUrl: 'https://images.unsplash.com/photo-1572695157366-5e585ab2b69f?auto=format&fit=crop&q=80&w=800',
-        category: categoryMap['Starters & Appetizers'],
-        dietaryAttributes: { isVegetarian: true, isVegan: true },
-      },
-      {
-        title: 'Margherita Pizza',
-        description: 'San Marzano tomato sauce, fresh mozzarella, and basil leaves.',
-        price: 14.99,
-        photoUrl: 'https://images.unsplash.com/photo-1574071318508-1cdbab80d002?auto=format&fit=crop&q=80&w=800',
-        category: categoryMap['Wood-Fired Pizzas'],
-        dietaryAttributes: { isVegetarian: true, isVegan: false },
-      },
-      {
-        title: 'Truffle Mushroom Pizza',
-        description: 'White sauce, roasted wild mushrooms, truffle oil, and thyme.',
+        title: "Wood-Fired Margherita",
         price: 18.99,
-        photoUrl: 'https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&q=80&w=800',
+        description: "San Marzano tomatoes, fresh buffalo mozzarella, fragrant basil, and extra virgin olive oil.",
+        photoUrl: "https://images.unsplash.com/photo-1604068549290-dea0e4a305ca?q=80&w=400&auto=format&fit=crop",
         category: categoryMap['Wood-Fired Pizzas'],
         dietaryAttributes: { isVegetarian: true, isVegan: false },
       },
       {
-        title: 'Spicy Pepperoni Pizza',
-        description: 'Tomato sauce, mozzarella, spicy pepperoni, and a drizzle of hot honey.',
-        price: 17.50,
-        photoUrl: 'https://images.unsplash.com/photo-1628840042765-356cda07504e?auto=format&fit=crop&q=80&w=800',
+        title: "Pistachio Lamb Cutlets",
+        price: 36.99,
+        description: "Grass-fed lamb racks encrusted in crushed pistachios, served with red wine reduction.",
+        photoUrl: "https://images.unsplash.com/photo-1544025162-d76694265947?q=80&w=400&auto=format&fit=crop",
+        category: categoryMap['Meat & Seafood'],
+        dietaryAttributes: { isVegetarian: false, isVegan: false },
+      },
+      {
+        title: "Artisanal Lobster Ravioli",
+        price: 31.99,
+        description: "Handmade pasta pockets filled with Atlantic lobster in a rich saffron-infused cream sauce.",
+        photoUrl: "https://images.unsplash.com/photo-1551183053-bf91a1d81141?q=80&w=400&auto=format&fit=crop",
+        category: categoryMap['Pasta & Risotto'],
+        dietaryAttributes: { isVegetarian: false, isVegan: false },
+      },
+      {
+        title: "Wagyu Beef Ribeye",
+        price: 64.99,
+        description: "A5 Grade Japanese Wagyu cooked over open wood-fire coals, served with smoked butter.",
+        photoUrl: "https://images.unsplash.com/photo-1546964124-0cce460f38ef?q=80&w=400&auto=format&fit=crop",
+        category: categoryMap['Meat & Seafood'],
+        dietaryAttributes: { isVegetarian: false, isVegan: false },
+      },
+      {
+        title: "Saffron Seafood Risotto",
+        price: 33.99,
+        description: "Luxe saffron rice layered with tiger prawns, scallops, fresh mussels, and baby squid.",
+        photoUrl: "https://images.unsplash.com/photo-1534422298391-e4f8c172dddb?q=80&w=400&auto=format&fit=crop",
+        category: categoryMap['Pasta & Risotto'],
+        dietaryAttributes: { isVegetarian: false, isVegan: false },
+      },
+      {
+        title: "Tiramisu Classico",
+        price: 11.99,
+        description: "House-baked ladyfingers soaked in espresso, layered with whipped mascarpone cream.",
+        photoUrl: "https://images.unsplash.com/photo-1571877227200-a0d98ea607e9?q=80&w=400&auto=format&fit=crop",
+        category: categoryMap['Desserts'],
+        dietaryAttributes: { isVegetarian: true, isVegan: false },
+      },
+      {
+        title: "Seared Atlantic Salmon",
+        price: 28.99,
+        description: "Crispy skin salmon fillet resting on braised asparagus, drizzled with dill lemon glaze.",
+        photoUrl: "https://images.unsplash.com/photo-1485921325814-a5341f61173c?q=80&w=400&auto=format&fit=crop",
+        category: categoryMap['Meat & Seafood'],
+        dietaryAttributes: { isVegetarian: false, isVegan: false },
+      },
+      {
+        title: "Handmade Squid Ink Tagliolini",
+        description: "Squid ink pasta tossed with calamari, cherry tomatoes, white wine, garlic, and chili.",
+        price: 27.99,
+        photoUrl: "https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?q=80&w=500&auto=format&fit=crop",
+        category: categoryMap['Pasta & Risotto'],
+        dietaryAttributes: { isVegetarian: false, isVegan: false },
+      },
+      {
+        title: "Wood-Fired Honey Fig Prosciutto Pizza",
+        description: "Caramelized black mission figs, salty Parma ham, gorgonzola cheese, wild arugula, and dark honey drizzle.",
+        price: 22.99,
+        photoUrl: "https://images.unsplash.com/photo-1513104890138-7c749659a591?q=80&w=500&auto=format&fit=crop",
         category: categoryMap['Wood-Fired Pizzas'],
         dietaryAttributes: { isVegetarian: false, isVegan: false },
       },
       {
-        title: 'Spaghetti Carbonara',
-        description: 'Classic Roman pasta with crispy pancetta, egg yolk, pecorino cheese, and black pepper.',
-        price: 19.99,
-        photoUrl: 'https://images.unsplash.com/photo-1612874742237-6526221588e3?auto=format&fit=crop&q=80&w=800',
-        category: categoryMap['Pasta & Risotto'],
+        title: "Rosemary Infused Venison Tenderloin",
+        description: "Pan-roasted wild venison medallion with juniper berry glaze, parsnip mash, and roasted baby carrots.",
+        price: 45.99,
+        photoUrl: "https://images.unsplash.com/photo-1544025162-d76694265947?q=80&w=500&auto=format&fit=crop",
+        category: categoryMap['Meat & Seafood'],
         dietaryAttributes: { isVegetarian: false, isVegan: false },
       },
       {
-        title: 'Penne Arrabbiata',
-        description: 'Penne pasta tossed in a spicy garlic and tomato sauce.',
-        price: 15.99,
-        photoUrl: 'https://images.unsplash.com/photo-1608897013039-887f21d8c804?auto=format&fit=crop&q=80&w=800',
-        category: categoryMap['Pasta & Risotto'],
-        dietaryAttributes: { isVegetarian: true, isVegan: true },
-      },
-      {
-        title: 'Classic Tiramisu',
-        description: 'Espresso-soaked ladyfingers layered with mascarpone cream and dusted with cocoa.',
-        price: 9.00,
-        photoUrl: 'https://images.unsplash.com/photo-1571115177098-24ebd5e1814e?auto=format&fit=crop&q=80&w=800',
+        title: "Cardamom Panna Cotta",
+        description: "Velvety cream panna cotta flavored with fresh green cardamom, topped with blood orange reduction.",
+        price: 13.99,
+        photoUrl: "https://images.unsplash.com/photo-1488477181946-6428a0291777?q=80&w=500&auto=format&fit=crop",
         category: categoryMap['Desserts'],
         dietaryAttributes: { isVegetarian: true, isVegan: false },
-      },
-      {
-        title: 'Panna Cotta',
-        description: 'Vanilla bean panna cotta served with a mixed berry compote.',
-        price: 8.50,
-        photoUrl: 'https://images.unsplash.com/photo-1550966871-3ed3cdb5ed0c?auto=format&fit=crop&q=80&w=800',
-        category: categoryMap['Desserts'],
-        dietaryAttributes: { isVegetarian: true, isVegan: false },
-      },
-      {
-        title: 'Fresh Lemonade',
-        description: 'House-made sparkling lemonade with a hint of mint.',
-        price: 4.50,
-        photoUrl: 'https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?auto=format&fit=crop&q=80&w=800',
-        category: categoryMap['Beverages'],
-        dietaryAttributes: { isVegetarian: true, isVegan: true },
-      },
-      {
-        title: 'Espresso',
-        description: 'Rich and bold double shot of Italian espresso.',
-        price: 3.50,
-        photoUrl: 'https://images.unsplash.com/photo-1510591509098-f4fdc6d0ff04?auto=format&fit=crop&q=80&w=800',
-        category: categoryMap['Beverages'],
-        dietaryAttributes: { isVegetarian: true, isVegan: true },
       },
     ];
 
     const createdItems = await Item.insertMany(itemsData);
     console.log(`Added ${createdItems.length} items.`);
 
-    // Add a Special
-    const specialData = {
-      item: createdItems[3]._id, // Truffle Mushroom Pizza
-      date: new Date(),
-    };
-    await Special.create(specialData);
-    console.log("Added a Today's Special.");
+    // Add Specials
+    const specialData = [
+      { item: createdItems[8]._id, date: new Date() },
+      { item: createdItems[9]._id, date: new Date() },
+      { item: createdItems[10]._id, date: new Date() },
+      { item: createdItems[11]._id, date: new Date() },
+    ];
+    await Special.insertMany(specialData);
+    console.log(`Added ${specialData.length} Specials.`);
 
     // Create Chefs
     const chefsData = [
       {
-        name: 'Gordon Ramsay',
-        role: 'Executive Chef',
-        bio: 'Multi-Michelin starred chef known for his fiery temper and exquisite culinary skills.',
-        photoUrl: 'https://images.unsplash.com/photo-1577219491135-ce391730fb2c?auto=format&fit=crop&q=80&w=800',
-        specialties: ['Beef Wellington', 'Scallops'],
-        experienceYears: 30,
+        name: "Chef Marco Pierre",
+        role: "Executive Culinary Director",
+        bio: "With over 18 years in Michelin-starred establishments, Chef Marco merges ancient wood-fire grilling methods with boundary-pushing molecular gastronomy to craft unforgettable tastes.",
+        photoUrl: "https://images.unsplash.com/photo-1577219491135-ce391730fb2c?q=80&w=600&auto=format&fit=crop",
+        specialties: ["Artisanal Sourdough", "Dry-Aged Meats", "Plating Artistry"],
+        experienceYears: 18,
       },
       {
-        name: 'Dominique Ansel',
-        role: 'Head Pastry Chef',
-        bio: 'World-renowned pastry chef, inventor of the Cronut and master of French desserts.',
-        photoUrl: 'https://images.unsplash.com/photo-1583394838336-acd977736f90?auto=format&fit=crop&q=80&w=800',
-        specialties: ['French Pastries', 'Cronuts', 'Tarts'],
-        experienceYears: 20,
+        name: "Chef Elena Rostova",
+        role: "Head Pastry Artist",
+        bio: "Elena elevates pastry creation to visual masterwork. Her desserts balance texture and subtle cardamon, saffron elements, ensuring a grand and sweet conclusion to your culinary journey.",
+        photoUrl: "https://images.unsplash.com/photo-1583394838336-acd977736f90?q=80&w=600&auto=format&fit=crop",
+        specialties: ["French Macarons", "Tempered Chocolate", "Sourdough Crûst"],
+        experienceYears: 12,
       },
       {
-        name: 'Massimo Bottura',
-        role: 'Sous Chef',
-        bio: 'Italian restaurateur blending tradition with innovation to create modern masterpieces.',
-        photoUrl: 'https://images.unsplash.com/photo-1581349485608-9469926a8e5e?auto=format&fit=crop&q=80&w=800',
-        specialties: ['Modern Italian', 'Tortellini'],
-        experienceYears: 25,
+        name: "Chef Kenji Tanaka",
+        role: "Master of Grills & Fire",
+        bio: "Tanaka is a fire sculptor. He oversees our live wood-burning hearth, orchestrating the precise levels of smoke, heat, and ash that give Slice 'n Spice its distinctive trademark flavor.",
+        photoUrl: "https://images.unsplash.com/photo-1607604276583-eef5d076aa5f?q=80&w=600&auto=format&fit=crop",
+        specialties: ["Hardwood Selection", "Smoked Infusions", "Seafood Sear"],
+        experienceYears: 14,
       },
     ];
 

@@ -81,7 +81,14 @@ export const getItemById = asyncHandler(async (req: Request, res: Response) => {
  * @access  Public
  */
 export const getSpecials = asyncHandler(async (req: Request, res: Response) => {
-  const specials = await Special.find().populate({
+  const specials = await Special.find({
+    isActive: true,
+    $or: [
+      { expiresAt: { $gt: new Date() } },
+      { expiresAt: null },
+      { expiresAt: { $exists: false } }
+    ]
+  }).populate({
     path: 'item',
     populate: { path: 'category' }
   });

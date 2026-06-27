@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { Helmet } from 'react-helmet-async';
 
 // Components
 import Navbar from "../components/Navbar";
@@ -33,16 +35,15 @@ export default function Landing() {
   const fetchData = () => {
     setIsLoading(true);
     Promise.all([
-      fetch("http://localhost:5000/api/v1/menu/specials").then(res => res.json()),
-      fetch("http://localhost:5000/api/v1/chefs").then(res => res.json()),
-      fetch("http://localhost:5000/api/v1/menu/full").then(res => res.json())
+      fetch(`${import.meta.env.VITE_API_URL}/api/v1/menu/specials`).then(res => res.json()),
+      fetch(`${import.meta.env.VITE_API_URL}/api/v1/chefs`).then(res => res.json()),
+      fetch(`${import.meta.env.VITE_API_URL}/api/v1/menu/top-rated`).then(res => res.json())
     ])
-    .then(([specialsData, chefsData, menuData]) => {
+    .then(([specialsData, chefsData, topRatedData]) => {
       if (specialsData.success && specialsData.data) setSpecials(specialsData.data);
       if (chefsData.success && chefsData.data) setChefs(chefsData.data);
-      if (menuData.success && menuData.data) {
-        const allItems = menuData.data.flatMap((cat: any) => cat.items || []);
-        setFamousDishes(allItems.slice(0, 8));
+      if (topRatedData.success && topRatedData.data) {
+        setFamousDishes(topRatedData.data);
       }
     })
     .catch((err) => console.error("Error fetching landing data:", err))
@@ -51,10 +52,26 @@ export default function Landing() {
     });
   };
 
+  const location = useLocation();
+
   // Fetch data on initial mount
   useEffect(() => {
     fetchData();
   }, []);
+
+  // Handle scrolling when navigating from another page with a target section in state
+  useEffect(() => {
+    if (location.state?.scrollTo) {
+      setTimeout(() => {
+        const element = document.getElementById(location.state.scrollTo);
+        if (element) {
+          element.scrollIntoView({ behavior: "smooth" });
+        }
+      }, 100);
+      // Clean up the state so it doesn't scroll again on re-renders
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state]);
 
   /**
    * Smooth scroll helper function passed down to the HeroSection 
@@ -68,7 +85,15 @@ export default function Landing() {
   };
 
   return (
-    <div className="min-h-screen bg-black text-white font-sans antialiased overflow-x-hidden">
+    <div className="min-h-screen bg-black text-white font-sans antialiased overflow-x-hidden flex flex-col relative">
+      <Helmet>
+        <title>Slice 'n Spice | Premium Cloud Kitchen</title>
+        <meta name="description" content="Experience the finest wood-fired pizzas and gourmet specials in London. Order fresh, premium meals from our expert chefs right to your door." />
+      </Helmet>
+
+      {/* Decorative gradient overlay */}
+      <div className="fixed inset-0 pointer-events-none bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-amber-900/10 via-black to-black opacity-60 z-0"></div>
+
       {/* Navigation */}
       <Navbar />
 

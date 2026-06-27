@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { Helmet } from "react-helmet-async";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import DishCard from "../components/DishCard";
@@ -12,7 +13,7 @@ export default function Menu() {
     // Scroll to top when page loads
     window.scrollTo(0, 0);
 
-    fetch("http://localhost:5000/api/v1/menu/full")
+    fetch(`${import.meta.env.VITE_API_URL}/api/v1/menu/full`)
       .then((res) => res.json())
       .then((data) => {
         if (data.success && data.data) {
@@ -28,6 +29,11 @@ export default function Menu() {
 
   return (
     <div className="min-h-screen bg-black text-white font-sans antialiased overflow-x-hidden flex flex-col">
+      <Helmet>
+        <title>Our Menu | Slice 'n Spice</title>
+        <meta name="description" content="Explore our full menu of wood-fired pizzas, handcrafted pastas, and signature desserts. See real customer ratings and discover your next favorite meal." />
+      </Helmet>
+      
       <Navbar />
 
       {/* Hero Section */}
@@ -95,11 +101,23 @@ export default function Menu() {
                       category.items.map((dish: any) => (
                         <DishCard
                           key={dish._id}
+                          _id={dish._id}
                           title={dish.title}
                           price={dish.price}
                           description={dish.description}
                           image={dish.photoUrl}
-                          rating={dish.rating}
+                          rating={dish.avgRating}
+                          reviewCount={dish.reviewCount}
+                          onReviewSuccess={() => {
+                            // Refetch the menu to update ratings
+                            fetch(`${import.meta.env.VITE_API_URL}/api/v1/menu/full`)
+                              .then((res) => res.json())
+                              .then((data) => {
+                                if (data.success && data.data) {
+                                  setCategories(data.data);
+                                }
+                              });
+                          }}
                         />
                       ))
                     ) : (

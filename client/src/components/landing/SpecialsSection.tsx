@@ -38,7 +38,7 @@ export default function SpecialsSection({ activeSpecials, isLoading, user, refre
     if (!itemToDelete) return;
     setIsDeleting(true);
     try {
-      const res = await fetch(`http://localhost:5000/api/v1/admin/specials/${itemToDelete._id}`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/v1/admin/specials/${itemToDelete._id}`, {
         method: 'DELETE',
         credentials: 'include',
       });

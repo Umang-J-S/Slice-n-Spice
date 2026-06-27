@@ -56,6 +56,7 @@ export const Item = mongoose.model<IItem>('Item', itemSchema);
 // 3. Review Schema
 export interface IReview extends Document {
   item: mongoose.Types.ObjectId;
+  user: mongoose.Types.ObjectId;
   rating: number;
   reviewText: string;
   date: Date;
@@ -64,12 +65,16 @@ export interface IReview extends Document {
 const reviewSchema = new Schema<IReview>(
   {
     item: { type: Schema.Types.ObjectId, ref: 'Item', required: true },
+    user: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     rating: { type: Number, required: true, min: 1, max: 5 },
     reviewText: { type: String },
     date: { type: Date, default: Date.now },
   },
   { timestamps: true }
 );
+
+// Prevent a user from leaving multiple reviews for the same item
+reviewSchema.index({ item: 1, user: 1 }, { unique: true });
 
 export const Review = mongoose.model<IReview>('Review', reviewSchema);
 

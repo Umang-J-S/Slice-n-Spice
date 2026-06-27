@@ -1,10 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Star, ChevronRight, Edit2, Trash2 } from 'lucide-react';
+import { Star, ChevronRight, Edit2, Trash2, MessageSquarePlus } from 'lucide-react';
 import halalLogo from '../../assets/halal_badge.png';
 import { optimizeCloudinaryUrl } from '../../lib/cloudinary';
 import ConfirmDialog from '../admin/ConfirmDialog';
 import ItemEditModal from '../admin/ItemEditModal';
+import ReviewModal from '../ReviewModal';
 import { useToast } from '../../context/ToastContext';
+import { useNavigate } from 'react-router-dom';
 
 interface TopRatedSectionProps {
   famousDishes: any[];
@@ -42,8 +44,18 @@ export default function TopRatedSection({ famousDishes, isLoading, user, refresh
   const [itemToDelete, setItemToDelete] = useState<any>(null);
   const [itemToEdit, setItemToEdit] = useState<any>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [itemToReview, setItemToReview] = useState<any>(null);
 
   const isAdmin = user?.role === 'admin';
+  const navigate = useNavigate();
+
+  const handleReviewClick = (dish: any) => {
+    if (!user) {
+      navigate('/admin/login');
+      return;
+    }
+    setItemToReview(dish);
+  };
 
   useEffect(() => {
     isHoveredRef.current = isHovered;
@@ -122,7 +134,7 @@ export default function TopRatedSection({ famousDishes, isLoading, user, refresh
     if (!itemToDelete) return;
     setIsDeleting(true);
     try {
-      const res = await fetch(`http://localhost:5000/api/v1/admin/items/${itemToDelete._id}`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/v1/admin/items/${itemToDelete._id}`, {
         method: 'DELETE',
         credentials: 'include',
       });
@@ -185,7 +197,7 @@ export default function TopRatedSection({ famousDishes, isLoading, user, refresh
           ) : [...famousDishes, ...famousDishes].map((dish, index) => (
             <div
               key={`${dish._id}-${index}`}
-              className="w-[280px] sm:w-[320px] bg-gradient-to-b from-neutral-900 to-neutral-950 border border-white/10 rounded-2xl overflow-hidden hover:border-amber-400/40 transition-all duration-300 flex-shrink-0 group/card"
+              className="w-[280px] sm:w-[320px] flex flex-col bg-gradient-to-b from-neutral-900 to-neutral-950 border border-white/10 rounded-2xl overflow-hidden hover:border-amber-400/40 transition-all duration-300 flex-shrink-0 group/card"
             >
               {/* Food Image */}
               <div className="h-[200px] overflow-hidden relative">
@@ -195,9 +207,11 @@ export default function TopRatedSection({ famousDishes, isLoading, user, refresh
                   className="w-full h-full object-cover group-hover/card:scale-105 transition-transform duration-500"
                   loading="lazy"
                 />
-                <div className="absolute top-3 right-3 bg-black/60 backdrop-blur-md px-2 py-1 rounded-lg flex items-center gap-1 border border-white/15 z-10">
-                  <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
-                  <span className="text-xs font-bold">{dish.rating || "4.5"}</span>
+                <div className="absolute top-3 right-3 bg-black/60 backdrop-blur-md px-2 py-1 rounded-lg flex items-center gap-1.5 border border-white/15 z-10">
+                  <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
+                  <span className="text-xs font-bold">
+                    {dish.avgRating ? Number(dish.avgRating).toFixed(1) : "New"} <span className="text-white/50 text-[10px]">({dish.reviewCount || 0})</span>
+                  </span>
                 </div>
                 {/* Non-veg Halal Logo Overlay */}
                 {!dish.isVegetarian && !dish.isVegan && (
@@ -228,19 +242,25 @@ export default function TopRatedSection({ famousDishes, isLoading, user, refresh
               </div>
 
               {/* Card Details */}
-              <div className="p-5 space-y-3">
-                <div className="flex items-start justify-between gap-2">
+              <div className="p-5 flex flex-col flex-1">
+                <div className="flex items-start justify-between gap-2 mb-3">
                   <h3 className="font-bold text-base sm:text-lg group-hover/card:text-amber-300 transition-colors line-clamp-1">
                     {dish.title}
                   </h3>
                   <span className="text-sm font-bold text-amber-400">${typeof dish.price === 'number' ? dish.price.toFixed(2) : dish.price}</span>
                 </div>
-                <p className="text-xs sm:text-sm text-white/50 line-clamp-2 leading-relaxed">
+                <p className="text-xs sm:text-sm text-white/50 line-clamp-2 leading-relaxed mb-4">
                   {dish.description}
                 </p>
-                <div className="pt-2 border-t border-white/5 flex items-center justify-between text-xs text-white/40">
-                  <span>Signature dish</span>
-                  <ChevronRight className="h-4 w-4 text-amber-400/50 group-hover/card:translate-x-1 transition-transform" />
+                <div className="pt-3 border-t border-white/5 flex items-center justify-between mt-auto">
+                  <span className="text-xs text-white/40">Signature dish</span>
+                  <button 
+                    onClick={() => handleReviewClick(dish)}
+                    className="flex items-center gap-1.5 text-xs font-bold text-amber-400 hover:text-black bg-amber-400/10 hover:bg-amber-400 px-3 py-1.5 rounded-full transition-all duration-300 shadow-[0_0_10px_rgba(251,191,36,0.1)] hover:shadow-[0_0_15px_rgba(251,191,36,0.4)]"
+                  >
+                    <MessageSquarePlus className="h-3.5 w-3.5" />
+                    <span>Rate Dish</span>
+                  </button>
                 </div>
               </div>
             </div>
@@ -263,6 +283,19 @@ export default function TopRatedSection({ famousDishes, isLoading, user, refresh
           onClose={() => setItemToEdit(null)}
           item={itemToEdit}
           onSuccess={() => {
+            if (refreshMenu) refreshMenu();
+          }}
+        />
+      )}
+
+      {itemToReview && (
+        <ReviewModal
+          isOpen={!!itemToReview}
+          onClose={() => setItemToReview(null)}
+          itemId={itemToReview._id}
+          itemTitle={itemToReview.title}
+          onSuccess={() => {
+            toast.success('Review submitted successfully!');
             if (refreshMenu) refreshMenu();
           }}
         />

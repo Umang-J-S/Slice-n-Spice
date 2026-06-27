@@ -48,8 +48,8 @@ export default function CategoryForm({ initialData, isEditMode, onSuccess }: Cat
     setIsLoading(true);
     try {
       const url = isEditMode && initialData?._id 
-        ? `http://localhost:5000/api/v1/admin/categories/${initialData._id}` 
-        : 'http://localhost:5000/api/v1/admin/categories';
+        ? `${import.meta.env.VITE_API_URL}/api/v1/admin/categories/${initialData._id}` 
+        : `${import.meta.env.VITE_API_URL}/api/v1/admin/categories`;
       const method = isEditMode ? 'PUT' : 'POST';
 
       const res = await fetch(url, {

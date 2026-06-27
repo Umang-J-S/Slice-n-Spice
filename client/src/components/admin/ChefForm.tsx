@@ -26,6 +26,7 @@ export default function ChefForm() {
     register,
     handleSubmit,
     reset,
+    watch,
     formState: { errors, isSubmitting },
   } = useForm<ChefFormValues>({
     resolver: yupResolver(chefSchema) as any,
@@ -37,6 +38,8 @@ export default function ChefForm() {
       specialties: '',
     },
   });
+
+  const bioValue = watch('bio') || '';
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -55,7 +58,7 @@ export default function ChefForm() {
         const formData = new FormData();
         formData.append('photo', selectedFile);
 
-        const uploadRes = await fetch('http://localhost:5000/api/v1/admin/upload', {
+        const uploadRes = await fetch(`${import.meta.env.VITE_API_URL}/api/v1/admin/upload`, {
           method: 'POST',
           body: formData,
           credentials: 'include',
@@ -78,7 +81,7 @@ export default function ChefForm() {
         specialties: data.specialties ? data.specialties.split(',').map((s) => s.trim()) : [],
       };
 
-      const res = await fetch('http://localhost:5000/api/v1/admin/chefs', {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/v1/admin/chefs`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -126,9 +129,15 @@ export default function ChefForm() {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="bio" className="text-white/80 font-semibold">Biography</Label>
+        <div className="flex items-center justify-between">
+          <Label htmlFor="bio" className="text-white/80 font-semibold">Biography</Label>
+          <span className={`text-xs ${512 - bioValue.length === 0 ? 'text-amber-400 font-bold' : 'text-white/40'}`}>
+            {512 - bioValue.length} characters remaining
+          </span>
+        </div>
         <Textarea 
           id="bio" 
+          maxLength={512}
           {...register('bio')} 
           placeholder="A short bio about the chef..." 
           className="bg-white/5 border border-white/10 focus-visible:ring-amber-500/50 text-white placeholder:text-white/30 rounded-xl hover:bg-white/10 transition-colors min-h-[120px] p-4 resize-y"

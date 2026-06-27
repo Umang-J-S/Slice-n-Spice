@@ -44,6 +44,7 @@ export default function ItemForm({ initialData, isEditMode, onSuccess }: ItemFor
     control,
     handleSubmit,
     reset,
+    watch,
     formState: { errors, isSubmitting },
   } = useForm<ItemFormValues>({
     resolver: yupResolver(itemSchema) as any,
@@ -58,6 +59,8 @@ export default function ItemForm({ initialData, isEditMode, onSuccess }: ItemFor
       category: initialData?.category?._id || initialData?.category || '',
     },
   });
+
+  const descriptionValue = watch('description') || '';
 
   useEffect(() => {
     if (initialData) {
@@ -87,7 +90,7 @@ export default function ItemForm({ initialData, isEditMode, onSuccess }: ItemFor
     // Fetch categories for the dropdown
     const fetchCategories = async () => {
       try {
-        const res = await fetch('http://localhost:5000/api/v1/menu/full');
+        const res = await fetch(`${import.meta.env.VITE_API_URL}/api/v1/menu/full`);
         const data = await res.json();
         if (data.success) {
           setCategories(data.data);
@@ -108,7 +111,7 @@ export default function ItemForm({ initialData, isEditMode, onSuccess }: ItemFor
         const formData = new FormData();
         formData.append('photo', selectedFile);
 
-        const uploadRes = await fetch('http://localhost:5000/api/v1/admin/upload', {
+        const uploadRes = await fetch(`${import.meta.env.VITE_API_URL}/api/v1/admin/upload`, {
           method: 'POST',
           body: formData,
           credentials: 'include',
@@ -139,8 +142,8 @@ export default function ItemForm({ initialData, isEditMode, onSuccess }: ItemFor
       };
 
       const url = isEditMode && initialData?._id 
-        ? `http://localhost:5000/api/v1/admin/items/${initialData._id}` 
-        : 'http://localhost:5000/api/v1/admin/items';
+        ? `${import.meta.env.VITE_API_URL}/api/v1/admin/items/${initialData._id}` 
+        : `${import.meta.env.VITE_API_URL}/api/v1/admin/items`;
       const method = isEditMode ? 'PUT' : 'POST';
 
       const res = await fetch(url, {
@@ -179,9 +182,15 @@ export default function ItemForm({ initialData, isEditMode, onSuccess }: ItemFor
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="description" className="text-white/80 font-semibold">Description</Label>
+        <div className="flex items-center justify-between">
+          <Label htmlFor="description" className="text-white/80 font-semibold">Description</Label>
+          <span className={`text-xs ${512 - descriptionValue.length === 0 ? 'text-amber-400 font-bold' : 'text-white/40'}`}>
+            {512 - descriptionValue.length} characters remaining
+          </span>
+        </div>
         <Textarea 
           id="description" 
+          maxLength={512}
           {...register('description')} 
           placeholder="Delicious fresh tomatoes..." 
           className="bg-white/5 border border-white/10 focus-visible:ring-amber-500/50 text-white placeholder:text-white/30 rounded-xl hover:bg-white/10 transition-colors min-h-[120px] p-4 resize-y"

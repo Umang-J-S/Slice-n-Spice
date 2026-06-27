@@ -23,7 +23,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const checkAuth = async () => {
     try {
-      const res = await fetch('http://localhost:5000/api/v1/auth/current-user', {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/v1/auth/current-user`, {
         credentials: 'include'
       });
       const data = await res.json();
@@ -41,7 +41,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const logout = async () => {
     try {
-      await fetch('http://localhost:5000/api/v1/auth/logout', {
+      await fetch(`${import.meta.env.VITE_API_URL}/api/v1/auth/logout`, {
         credentials: 'include'
       });
       setUser(null);

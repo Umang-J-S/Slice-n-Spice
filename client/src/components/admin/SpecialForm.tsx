@@ -69,7 +69,7 @@ export default function SpecialForm({ initialData, isEditMode, onSuccess }: Spec
   useEffect(() => {
     const fetchItems = async () => {
       try {
-        const res = await fetch('http://localhost:5000/api/v1/menu/full');
+        const res = await fetch(`${import.meta.env.VITE_API_URL}/api/v1/menu/full`);
         const data = await res.json();
         if (data.success) {
           let allItems: any[] = [];
@@ -93,8 +93,8 @@ export default function SpecialForm({ initialData, isEditMode, onSuccess }: Spec
       };
 
       const url = isEditMode && initialData?._id 
-        ? `http://localhost:5000/api/v1/admin/specials/${initialData._id}` 
-        : 'http://localhost:5000/api/v1/admin/specials';
+        ? `${import.meta.env.VITE_API_URL}/api/v1/admin/specials/${initialData._id}` 
+        : `${import.meta.env.VITE_API_URL}/api/v1/admin/specials`;
       const method = isEditMode ? 'PUT' : 'POST';
 
       const res = await fetch(url, {

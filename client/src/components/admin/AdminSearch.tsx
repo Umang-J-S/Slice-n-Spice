@@ -80,7 +80,7 @@ export default function AdminSearch() {
     if (!window.confirm(`Are you sure you want to ${type === 'specials' ? 'remove this special' : 'delete this ' + (type === 'categories' ? 'category' : 'item')}?`)) return;
     
     try {
-      const res = await fetch(`http://localhost:5000/api/v1/admin/${type}/${id}`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/v1/admin/${type}/${id}`, {
         method: 'DELETE',
         credentials: 'include'
       });
@@ -107,7 +107,7 @@ export default function AdminSearch() {
       setError(null);
 
       try {
-        const res = await fetch(`http://localhost:5000/api/v1/admin/search?q=${encodeURIComponent(debouncedQuery)}`, {
+        const res = await fetch(`${import.meta.env.VITE_API_URL}/api/v1/admin/search?q=${encodeURIComponent(debouncedQuery)}`, {
           method: 'GET',
           credentials: 'include',
         });

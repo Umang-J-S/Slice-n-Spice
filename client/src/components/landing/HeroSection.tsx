@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -25,6 +25,29 @@ interface HeroSectionProps {
  */
 export default function HeroSection({ user, scrollToSection }: HeroSectionProps) {
   const navigate = useNavigate();
+  
+  // Default fallback style to prevent hydration mismatch flashes, then randomly update
+  const [randomStyle, setRandomStyle] = useState({
+    font: "font-['Caveat']",
+    pSize: "text-2xl sm:text-3xl font-bold tracking-wider"
+  });
+
+  useEffect(() => {
+    // Array of 10 different, readable premium font families.
+    // We strictly keep the color the same (text-amber-300 with drop shadow).
+    const styles = [
+      { font: "font-['Caveat']", pSize: "text-2xl sm:text-3xl font-bold tracking-wider" }, // 1. Warm handwriting
+      { font: "font-['Playfair_Display'] italic", pSize: "text-xl sm:text-2xl font-bold" }, // 2. Elegant serif
+      { font: "font-['Lora'] italic", pSize: "text-xl sm:text-2xl font-bold" }, // 3. Classic serif
+      { font: "font-['Merriweather'] italic", pSize: "text-xl sm:text-2xl font-black" }, // 6. Heavy serif
+      { font: "font-['Satisfy']", pSize: "text-2xl sm:text-3xl font-normal" }, // 7. Artisanal brush
+      { font: "font-['Great_Vibes']", pSize: "text-3xl sm:text-4xl font-normal" }, // 8. Elegant script
+      { font: "font-['Lobster'] tracking-wide", pSize: "text-2xl sm:text-3xl font-normal" }, // 9. Playful display
+      { font: "font-['Oswald'] uppercase tracking-widest", pSize: "text-lg sm:text-xl font-bold" } // 10. Tall, strong sans
+    ];
+    // Pick a random font family on mount (each page refresh)
+    setRandomStyle(styles[Math.floor(Math.random() * styles.length)]);
+  }, []);
 
   return (
     <section className="relative min-h-screen flex items-center bg-black overflow-hidden">
@@ -50,13 +73,13 @@ export default function HeroSection({ user, scrollToSection }: HeroSectionProps)
 
         <h1 className="text-4xl sm:text-6xl md:text-7xl font-bold tracking-tight max-w-3xl leading-tight">
           Delicious Food, <br />
-          <span className="bg-gradient-to-r from-amber-500 via-amber-400 to-amber-200 bg-clip-text text-transparent font-['Dancing_Script'] font-normal pb-2 inline-block">
+          <span className={`bg-gradient-to-r from-amber-500 via-amber-400 to-amber-200 bg-clip-text text-transparent pb-2 px-2 -ml-2 inline-block transition-all duration-500 ${randomStyle.font}`}>
             Made Fresh Every Day.
           </span>
         </h1>
 
         <p className="text-base sm:text-xl text-white/70 max-w-xl leading-relaxed">
-          Your favorite meals, prepared with care and delivered straight from our <span className="text-amber-300 font-['Dancing_Script'] font-normal px-1">cloud kitchen</span>. Enjoy <span className="text-amber-300 font-['Dancing_Script'] font-normal px-1">hassle-free takeaway</span>, <span className="text-amber-300 font-['Dancing_Script'] font-normal px-1">fast delivery</span>, and <span className="text-amber-300 font-['Dancing_Script'] font-normal px-1">catering for events of all sizes</span>.
+          Your favorite meals, prepared with care and delivered straight from our <span className={`px-1 text-amber-300 drop-shadow-[0_0_8px_rgba(252,211,77,0.4)] transition-all duration-500 ${randomStyle.font} ${randomStyle.pSize}`}>cloud kitchen</span>. Enjoy <span className={`px-1 text-amber-300 drop-shadow-[0_0_8px_rgba(252,211,77,0.4)] transition-all duration-500 ${randomStyle.font} ${randomStyle.pSize}`}>hassle-free takeaway</span>, <span className={`px-1 text-amber-300 drop-shadow-[0_0_8px_rgba(252,211,77,0.4)] transition-all duration-500 ${randomStyle.font} ${randomStyle.pSize}`}>fast delivery</span>, and <span className={`px-1 text-amber-300 drop-shadow-[0_0_8px_rgba(252,211,77,0.4)] transition-all duration-500 ${randomStyle.font} ${randomStyle.pSize}`}>catering for events of all sizes</span>.
         </p>
 
         <div className="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto pt-4">

@@ -62,7 +62,7 @@ export default function Footer() {
 
   const scrollToSection = (id: string) => {
     if (location.pathname !== "/") {
-      navigate(`/#${id}`);
+      navigate("/", { state: { scrollTo: id } });
     } else {
       const element = document.getElementById(id);
       if (element) {
@@ -156,8 +156,8 @@ export default function Footer() {
       <div className="max-w-6xl mx-auto px-6 pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-white/40">
         <p>© {new Date().getFullYear()} Slice 'n Spice. All rights reserved.</p>
         <div className="flex gap-4">
-          <a href="#" className="hover:text-amber-400 transition-colors">Privacy Policy</a>
-          <a href="#" className="hover:text-amber-400 transition-colors">Terms of Service</a>
+          <button onClick={() => navigate("/privacy")} className="hover:text-amber-400 transition-colors">Privacy Policy</button>
+          <button onClick={() => navigate("/terms")} className="hover:text-amber-400 transition-colors">Terms of Service</button>
         </div>
       </div>
     </footer>

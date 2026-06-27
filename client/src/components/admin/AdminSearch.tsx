@@ -7,6 +7,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import CategoryForm from './CategoryForm';
 import ItemForm from './ItemForm';
 import SpecialForm from './SpecialForm';
+import ChefForm from './ChefForm';
+import ConfirmDialog from './ConfirmDialog';
 import { useToast } from '../../context/ToastContext';
 
 interface CategoryResult {
@@ -74,10 +76,18 @@ export default function AdminSearch() {
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [editingItem, setEditingItem] = useState<{type: 'category' | 'item' | 'special', data: any} | null>(null);
+  const [editingItem, setEditingItem] = useState<{type: 'category' | 'item' | 'special' | 'chef', data: any} | null>(null);
+  const [itemToDelete, setItemToDelete] = useState<{ id: string, type: 'categories' | 'items' | 'specials' | 'chefs', name?: string } | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
-  const handleDelete = async (id: string, type: 'categories' | 'items' | 'specials') => {
-    if (!window.confirm(`Are you sure you want to ${type === 'specials' ? 'remove this special' : 'delete this ' + (type === 'categories' ? 'category' : 'item')}?`)) return;
+  const handleDeleteClick = (id: string, type: 'categories' | 'items' | 'specials' | 'chefs', name: string = 'this item') => {
+    setItemToDelete({ id, type, name });
+  };
+
+  const confirmDelete = async () => {
+    if (!itemToDelete) return;
+    const { id, type } = itemToDelete;
+    setIsDeleting(true);
     
     try {
       const res = await fetch(`${import.meta.env.VITE_API_URL}/api/v1/admin/${type}/${id}`, {
@@ -93,6 +103,9 @@ export default function AdminSearch() {
       toast.success('Deleted successfully');
     } catch (err: any) {
       toast.error(err.message || 'Failed to delete');
+    } finally {
+      setIsDeleting(false);
+      setItemToDelete(null);
     }
   };
 
@@ -228,7 +241,7 @@ export default function AdminSearch() {
                           <button onClick={() => setEditingItem({ type: 'category', data: cat })} className="p-1.5 bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 rounded-md transition-colors" title="Edit">
                             <Pencil className="h-4 w-4" />
                           </button>
-                          <button onClick={() => handleDelete(cat._id, 'categories')} className="p-1.5 bg-red-500/10 text-red-400 hover:bg-red-500/20 rounded-md transition-colors" title="Delete">
+                          <button onClick={() => handleDeleteClick(cat._id, 'categories', cat.name)} className="p-1.5 bg-red-500/10 text-red-400 hover:bg-red-500/20 rounded-md transition-colors" title="Delete">
                             <Trash2 className="h-4 w-4" />
                           </button>
                         </div>
@@ -254,7 +267,7 @@ export default function AdminSearch() {
                       <button onClick={() => setEditingItem({ type: 'item', data: item })} className="p-2 bg-black/60 backdrop-blur-md border border-white/10 text-blue-400 hover:text-blue-300 hover:bg-black/80 rounded-lg transition-colors shadow-lg" title="Edit">
                         <Pencil className="h-4 w-4" />
                       </button>
-                      <button onClick={() => handleDelete(item._id, 'items')} className="p-2 bg-black/60 backdrop-blur-md border border-white/10 text-red-400 hover:text-red-300 hover:bg-black/80 rounded-lg transition-colors shadow-lg" title="Delete">
+                      <button onClick={() => handleDeleteClick(item._id, 'items', item.title)} className="p-2 bg-black/60 backdrop-blur-md border border-white/10 text-red-400 hover:text-red-300 hover:bg-black/80 rounded-lg transition-colors shadow-lg" title="Delete">
                         <Trash2 className="h-4 w-4" />
                       </button>
                     </div>
@@ -318,7 +331,15 @@ export default function AdminSearch() {
               </div>
               <div className="grid grid-cols-1 gap-3">
                 {results.chefs.map((chef) => (
-                  <Card key={chef._id} className="bg-white/5 border-white/10 text-white overflow-hidden hover:border-amber-400/50 hover:shadow-lg hover:shadow-amber-400/5 transition-all duration-300 rounded-xl">
+                  <Card key={chef._id} className="bg-white/5 border-white/10 text-white overflow-hidden hover:border-amber-400/50 hover:shadow-lg hover:shadow-amber-400/5 transition-all duration-300 rounded-xl relative group">
+                    <div className="absolute top-2 right-2 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity flex gap-2 z-10">
+                      <button onClick={() => setEditingItem({ type: 'chef', data: chef })} className="p-2 bg-black/60 backdrop-blur-md border border-white/10 text-blue-400 hover:text-blue-300 hover:bg-black/80 rounded-lg transition-colors shadow-lg" title="Edit Chef">
+                        <Pencil className="h-4 w-4" />
+                      </button>
+                      <button onClick={() => handleDeleteClick(chef._id, 'chefs', chef.name)} className="p-2 bg-black/60 backdrop-blur-md border border-white/10 text-red-400 hover:text-red-300 hover:bg-black/80 rounded-lg transition-colors shadow-lg" title="Delete Chef">
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
                     <div className="flex flex-col sm:flex-row h-full">
                       {chef.photoUrl && (
                         <div className="sm:w-32 h-32 sm:h-auto overflow-hidden flex-shrink-0 bg-black/40">
@@ -373,7 +394,7 @@ export default function AdminSearch() {
                       <button onClick={() => setEditingItem({ type: 'special', data: special })} className="p-2 bg-black/60 backdrop-blur-md border border-white/10 text-blue-400 hover:text-blue-300 hover:bg-black/80 rounded-lg transition-colors shadow-lg" title="Edit Special Settings">
                         <Pencil className="h-4 w-4" />
                       </button>
-                      <button onClick={() => handleDelete(special._id, 'specials')} className="p-2 bg-black/60 backdrop-blur-md border border-white/10 text-red-400 hover:text-red-300 hover:bg-black/80 rounded-lg transition-colors shadow-lg" title="Remove Special">
+                      <button onClick={() => handleDeleteClick(special._id, 'specials', special.item?.title || 'this special')} className="p-2 bg-black/60 backdrop-blur-md border border-white/10 text-red-400 hover:text-red-300 hover:bg-black/80 rounded-lg transition-colors shadow-lg" title="Remove Special">
                         <Trash2 className="h-4 w-4" />
                       </button>
                     </div>
@@ -422,7 +443,7 @@ export default function AdminSearch() {
         <DialogContent className="bg-neutral-950 border border-white/10 text-white sm:max-w-[500px]">
           <DialogHeader>
             <DialogTitle className="text-amber-400 font-bold">
-              Edit {editingItem?.type === 'category' ? 'Category' : editingItem?.type === 'special' ? 'Special' : 'Item'}
+              Edit {editingItem?.type === 'category' ? 'Category' : editingItem?.type === 'special' ? 'Special' : editingItem?.type === 'chef' ? 'Chef' : 'Item'}
             </DialogTitle>
             <DialogDescription className="text-white/60">
               Make changes to this {editingItem?.type} below.
@@ -450,9 +471,27 @@ export default function AdminSearch() {
                 onSuccess={() => setEditingItem(null)} 
               />
             )}
+            {editingItem?.type === 'chef' && (
+              <ChefForm 
+                initialData={editingItem.data} 
+                isEditMode={true} 
+                onSuccess={() => setEditingItem(null)} 
+              />
+            )}
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={!!itemToDelete}
+        onClose={() => setItemToDelete(null)}
+        onConfirm={confirmDelete}
+        title={`Delete ${itemToDelete?.type === 'categories' ? 'Category' : itemToDelete?.type === 'specials' ? 'Special' : itemToDelete?.type === 'chefs' ? 'Chef' : 'Item'}`}
+        description={`Are you sure you want to delete "${itemToDelete?.name}"? ${itemToDelete?.type === 'items' ? 'It will be hidden from the menu.' : 'This action cannot be undone.'}`}
+        isLoading={isDeleting}
+        confirmText="Delete"
+      />
     </div>
   );
 }

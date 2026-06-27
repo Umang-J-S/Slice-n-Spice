@@ -16,6 +16,7 @@ interface ConfirmDialogProps {
   title: string;
   description: string;
   isLoading?: boolean;
+  confirmText?: string;
 }
 
 export default function ConfirmDialog({
@@ -25,6 +26,7 @@ export default function ConfirmDialog({
   title,
   description,
   isLoading = false,
+  confirmText = 'Delete Permanently',
 }: ConfirmDialogProps) {
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -54,7 +56,7 @@ export default function ConfirmDialog({
             disabled={isLoading}
             className="w-full sm:w-auto rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold transition-colors"
           >
-            {isLoading ? 'Deleting...' : 'Delete Permanently'}
+            {isLoading ? 'Deleting...' : confirmText}
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -55,7 +55,7 @@ export default function HeroSection({ user, scrollToSection }: HeroSectionProps)
       {/* We use absolute inset-0 to stretch across the whole section and z-0 to sit behind the text content */}
       <div className="absolute inset-0 z-0">
         <img
-          src={heroBg}
+          src="https://res.cloudinary.com/dt7h6ab8z/image/upload/v1782558737/slicenspice_uploads/z4xdb7emyooiohd6xen2.jpg"
           alt="Hero Background"
           className="w-full h-full object-cover opacity-35 scale-105 filter brightness-[0.7] contrast-[1.05]"
         />

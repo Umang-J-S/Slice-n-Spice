@@ -1,9 +1,11 @@
 import { useState } from 'react';
-import { Star, ChevronRight, MessageSquarePlus } from 'lucide-react';
+import { Star, ChevronRight, MessageSquarePlus, Trash2 } from 'lucide-react';
 import { optimizeCloudinaryUrl } from '../lib/cloudinary';
 import ReviewModal from './ReviewModal';
+import ConfirmDialog from './admin/ConfirmDialog';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { useToast } from '../context/ToastContext';
 
 interface DishCardProps {
   _id?: string;
@@ -14,14 +16,18 @@ interface DishCardProps {
   rating?: number | string;
   reviewCount?: number;
   onReviewSuccess?: () => void;
+  onDeleteSuccess?: () => void;
 }
 
-export default function DishCard({ _id, title, price, description, image, rating = 0, reviewCount = 0, onReviewSuccess }: DishCardProps) {
+export default function DishCard({ _id, title, price, description, image, rating = 0, reviewCount = 0, onReviewSuccess, onDeleteSuccess }: DishCardProps) {
   const displayPrice = typeof price === 'number' ? price.toFixed(2) : price;
   const displayRating = Number(rating) > 0 ? Number(rating).toFixed(1) : "New";
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { toast } = useToast();
 
   const handleReviewClick = () => {
     if (!user) {
@@ -29,6 +35,35 @@ export default function DishCard({ _id, title, price, description, image, rating
       return;
     }
     setIsReviewModalOpen(true);
+  };
+
+  const handleDeleteClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    setIsDeleting(true);
+    try {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/v1/admin/items/${_id}`, {
+        method: 'DELETE',
+        credentials: 'include'
+      });
+      if (!res.ok) throw new Error('Failed to delete item');
+      
+      toast.success('Item deleted successfully');
+      setIsDeleteDialogOpen(false);
+      if (onDeleteSuccess) {
+        onDeleteSuccess();
+      } else {
+        window.location.reload();
+      }
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to delete item');
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   return (
@@ -42,6 +77,15 @@ export default function DishCard({ _id, title, price, description, image, rating
             className="w-full h-full object-cover group-hover/card:scale-105 transition-transform duration-500"
             loading="lazy"
           />
+          {user?.role === 'admin' && _id && (
+            <button 
+              onClick={handleDeleteClick}
+              className="absolute top-3 left-3 bg-red-500/80 hover:bg-red-600 backdrop-blur-md p-1.5 rounded-lg flex items-center justify-center transition-colors shadow-lg z-10 border border-red-500/20"
+              title="Delete Item"
+            >
+              <Trash2 className="h-4 w-4 text-white" />
+            </button>
+          )}
           <div className="absolute top-3 right-3 bg-black/60 backdrop-blur-md px-2 py-1 rounded-lg flex items-center gap-1.5 border border-white/15">
             <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
             <span className="text-xs font-bold">{displayRating} <span className="text-white/50 text-[10px]">({reviewCount})</span></span>
@@ -85,6 +129,18 @@ export default function DishCard({ _id, title, price, description, image, rating
           onSuccess={() => {
             if (onReviewSuccess) onReviewSuccess();
           }}
+        />
+      )}
+
+      {_id && (
+        <ConfirmDialog
+          isOpen={isDeleteDialogOpen}
+          onClose={() => setIsDeleteDialogOpen(false)}
+          onConfirm={confirmDelete}
+          title="Delete Menu Item"
+          description={`Are you sure you want to delete "${title}"? This will hide it from the menu.`}
+          isLoading={isDeleting}
+          confirmText="Delete Item"
         />
       )}
     </>

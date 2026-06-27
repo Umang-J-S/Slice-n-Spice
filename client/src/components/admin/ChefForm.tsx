@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { chefSchema } from '../../lib/validations/adminValidations';
@@ -16,10 +16,15 @@ type ChefFormValues = {
   experienceYears?: number | null;
   specialties?: string;
 };
+interface ChefFormProps {
+  initialData?: any;
+  isEditMode?: boolean;
+  onSuccess?: () => void;
+}
 
-export default function ChefForm() {
+export default function ChefForm({ initialData, isEditMode, onSuccess }: ChefFormProps = {}) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(initialData?.photoUrl || null);
   const { toast } = useToast();
 
   const {
@@ -31,15 +36,30 @@ export default function ChefForm() {
   } = useForm<ChefFormValues>({
     resolver: yupResolver(chefSchema) as any,
     defaultValues: {
-      name: '',
-      role: '',
-      bio: '',
-      photoUrl: '',
-      specialties: '',
+      name: initialData?.name || '',
+      role: initialData?.role || '',
+      bio: initialData?.bio || '',
+      photoUrl: initialData?.photoUrl || '',
+      experienceYears: initialData?.experienceYears || null,
+      specialties: initialData?.specialties ? initialData.specialties.join(', ') : '',
     },
   });
 
   const bioValue = watch('bio') || '';
+
+  useEffect(() => {
+    if (initialData) {
+      reset({
+        name: initialData.name || '',
+        role: initialData.role || '',
+        bio: initialData.bio || '',
+        photoUrl: initialData.photoUrl || '',
+        experienceYears: initialData.experienceYears || null,
+        specialties: initialData.specialties ? initialData.specialties.join(', ') : '',
+      });
+      setPreviewUrl(initialData.photoUrl || null);
+    }
+  }, [initialData, reset]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -81,8 +101,13 @@ export default function ChefForm() {
         specialties: data.specialties ? data.specialties.split(',').map((s) => s.trim()) : [],
       };
 
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/v1/admin/chefs`, {
-        method: 'POST',
+      const url = isEditMode && initialData?._id 
+        ? `${import.meta.env.VITE_API_URL}/api/v1/admin/chefs/${initialData._id}` 
+        : `${import.meta.env.VITE_API_URL}/api/v1/admin/chefs`;
+      const method = isEditMode ? 'PUT' : 'POST';
+
+      const res = await fetch(url, {
+        method,
         headers: {
           'Content-Type': 'application/json',
         },
@@ -92,15 +117,18 @@ export default function ChefForm() {
 
       if (!res.ok) {
         const errorData = await res.json();
-        throw new Error(errorData.message || 'Failed to create chef');
+        throw new Error(errorData.message || `Failed to ${isEditMode ? 'update' : 'create'} chef`);
       }
 
-      toast.success('Chef added successfully!');
-      reset();
-      setPreviewUrl(null);
-      setSelectedFile(null);
+      toast.success(`Chef ${isEditMode ? 'updated' : 'added'} successfully!`);
+      if (!isEditMode) {
+        reset();
+        setPreviewUrl(null);
+        setSelectedFile(null);
+      }
+      if (onSuccess) onSuccess();
     } catch (error: any) {
-      toast.error(error.message || 'Failed to add chef');
+      toast.error(error.message || `Failed to ${isEditMode ? 'update' : 'add'} chef`);
     }
   };
 
@@ -190,7 +218,7 @@ export default function ChefForm() {
       </div>
 
       <Button type="submit" disabled={isSubmitting} className="w-full rounded-xl bg-gradient-to-r from-amber-500 to-amber-400 hover:from-amber-400 hover:to-amber-300 text-black font-extrabold shadow-lg shadow-amber-500/20 py-6 text-lg transition-all hover:scale-[1.02] mt-4">
-        {isSubmitting ? 'Uploading & Saving...' : 'Add Chef'}
+        {isSubmitting ? 'Uploading & Saving...' : isEditMode ? 'Update Chef' : 'Add Chef'}
       </Button>
     </form>
   );

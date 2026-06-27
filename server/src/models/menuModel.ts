@@ -29,6 +29,7 @@ export interface IItem extends Document {
     isVegan: boolean;
     isNonVeg: boolean;
   };
+  isDeleted: boolean;
 }
 
 const itemSchema = new Schema<IItem>(
@@ -43,6 +44,7 @@ const itemSchema = new Schema<IItem>(
       isVegan: { type: Boolean, default: false },
       isNonVeg: { type: Boolean, default: false },
     },
+    isDeleted: { type: Boolean, default: false },
   },
   { timestamps: true }
 );

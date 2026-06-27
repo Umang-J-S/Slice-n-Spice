@@ -96,6 +96,7 @@ export default function CategoryForm({ initialData, isEditMode, onSuccess }: Cat
           id="displayOrder"
           type="number"
           {...register('displayOrder')}
+          onFocus={(e) => e.target.select()}
           placeholder="0"
           className="bg-white/5 border border-white/10 focus-visible:ring-amber-500/50 text-white placeholder:text-white/30 rounded-xl hover:bg-white/10 transition-colors h-12 px-4"
         />

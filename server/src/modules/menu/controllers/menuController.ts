@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import mongoose from 'mongoose';
 import { Category, Item, Special, Review } from '../../../models/menuModel';
 import asyncHandler from '../../../utils/asyncHandler';
+import { redisClient } from '../../../services/redis';
 
 /**
  * @desc    Get the full menu (categories with their respective items)
@@ -16,7 +17,7 @@ export const getFullMenu = asyncHandler(async (req: Request, res: Response) => {
         from: 'items',
         let: { categoryId: '$_id' },
         pipeline: [
-          { $match: { $expr: { $eq: ['$category', '$$categoryId'] } } },
+          { $match: { $expr: { $eq: ['$category', '$$categoryId'] }, isDeleted: { $ne: true } } },
           {
             $lookup: {
               from: 'reviews',
@@ -59,7 +60,7 @@ export const getItemsByCategory = asyncHandler(async (req: Request, res: Respons
     throw new Error('Invalid category ID');
   }
 
-  const items = await Item.find({ category: categoryId }).populate('category');
+  const items = await Item.find({ category: categoryId, isDeleted: { $ne: true } }).populate('category');
 
   res.status(200).json({
     success: true,
@@ -81,7 +82,7 @@ export const getItemById = asyncHandler(async (req: Request, res: Response) => {
     throw new Error('Invalid item ID');
   }
 
-  const item = await Item.findById(itemId).populate('category');
+  const item = await Item.findOne({ _id: itemId, isDeleted: { $ne: true } }).populate('category');
 
   if (!item) {
     res.status(404);
@@ -109,6 +110,7 @@ export const getSpecials = asyncHandler(async (req: Request, res: Response) => {
     ]
   }).populate({
     path: 'item',
+    match: { isDeleted: { $ne: true } },
     populate: { path: 'category' }
   });
 
@@ -124,26 +126,106 @@ export const getSpecials = asyncHandler(async (req: Request, res: Response) => {
  * @access  Public
  */
 export const getTopRatedItems = asyncHandler(async (req: Request, res: Response) => {
-  const topRated = await Item.aggregate([
+  const cacheKey = 'menu:top-rated';
+  
+  if (redisClient) {
+    const cachedData = await redisClient.get(cacheKey);
+    if (cachedData) {
+      return res.status(200).json({
+        success: true,
+        data: JSON.parse(cachedData),
+      });
+    }
+  }
+
+  const topRated = await Review.aggregate([
+    {
+      $group: {
+        _id: '$item',
+        avgRating: { $avg: '$rating' },
+        reviewCount: { $sum: 1 }
+      }
+    },
     {
       $lookup: {
-        from: 'reviews',
+        from: 'items',
         localField: '_id',
-        foreignField: 'item',
-        as: 'reviews',
-      },
+        foreignField: '_id',
+        as: 'itemDetails'
+      }
     },
-    {
-      $addFields: {
-        avgRating: { $avg: '$reviews.rating' },
-        reviewCount: { $size: '$reviews' },
-      },
-    },
-    {
-      $sort: { avgRating: -1, reviewCount: -1 },
-    },
+    { $unwind: '$itemDetails' },
+    { $match: { 'itemDetails.isDeleted': { $ne: true } } },
+    { $sort: { avgRating: -1, reviewCount: -1 } },
     { $limit: 8 },
+    {
+      $project: {
+        _id: '$_id',
+        avgRating: 1,
+        reviewCount: 1,
+        title: '$itemDetails.title',
+        description: '$itemDetails.description',
+        price: '$itemDetails.price',
+        photoUrl: '$itemDetails.photoUrl',
+        category: '$itemDetails.category',
+        dietaryAttributes: '$itemDetails.dietaryAttributes'
+      }
+    }
   ]);
+
+  // Fallback padding logic to ensure we always have 8 items
+  if (topRated.length < 8) {
+    const existingIds = topRated.map((item: any) => item._id);
+
+    // Fetch all remaining items that are not deleted
+    const remainingItems = await Item.find({
+      _id: { $nin: existingIds },
+      isDeleted: { $ne: true }
+    });
+
+    // Shuffle remaining items for randomness
+    const shuffledItems = remainingItems.sort(() => 0.5 - Math.random());
+
+    // Group by category
+    const categoryMap = new Map<string, any[]>();
+    for (const item of shuffledItems) {
+      const catId = item.category.toString();
+      if (!categoryMap.has(catId)) categoryMap.set(catId, []);
+      categoryMap.get(catId)!.push(item);
+    }
+
+    const categories = Array.from(categoryMap.values());
+    let catIndex = 0;
+
+    // Pick round-robin from categories
+    while (topRated.length < 8 && categories.length > 0) {
+      const currentCatArray = categories[catIndex % categories.length];
+      
+      if (currentCatArray.length > 0) {
+        const item = currentCatArray.shift();
+        topRated.push({
+          _id: item._id,
+          avgRating: 0, // Fallback items have 0 rating
+          reviewCount: 0,
+          title: item.title,
+          description: item.description,
+          price: item.price,
+          photoUrl: item.photoUrl,
+          category: item.category,
+          dietaryAttributes: item.dietaryAttributes
+        });
+      } else {
+        // Remove empty category array
+        categories.splice(catIndex % categories.length, 1);
+        continue; // Do not increment catIndex
+      }
+      catIndex++;
+    }
+  }
+
+  if (redisClient) {
+    await redisClient.setEx(cacheKey, 3600, JSON.stringify(topRated)); // Cache for 1 hour
+  }
 
   res.status(200).json({
     success: true,
@@ -197,6 +279,11 @@ export const addReview = asyncHandler(async (req: Request, res: Response) => {
     rating,
     reviewText,
   });
+
+  // Invalidate top-rated cache
+  if (redisClient) {
+    await redisClient.del('menu:top-rated');
+  }
 
   res.status(201).json({
     success: true,

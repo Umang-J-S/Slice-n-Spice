@@ -131,7 +131,7 @@ export default function SpecialForm({ initialData, isEditMode, onSuccess }: Spec
               <SelectTrigger className="bg-white/5 border border-white/10 focus:ring-amber-500/50 text-white rounded-xl hover:bg-white/10 transition-colors h-12 px-4">
                 <SelectValue placeholder="Choose an item..." />
               </SelectTrigger>
-              <SelectContent className="bg-neutral-950 border-white/10 text-white rounded-xl">
+              <SelectContent className="bg-neutral-950 border-white/10 text-white rounded-xl max-h-72 overflow-y-auto">
                 {items.map((it) => (
                   <SelectItem key={it._id} value={it._id} className="focus:bg-amber-500/20 focus:text-amber-300 cursor-pointer">
                     {it.title} (${it.price})

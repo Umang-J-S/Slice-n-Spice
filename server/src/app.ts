@@ -51,9 +51,11 @@ app.use(
 app.use(express.json());
 
 // Session middleware configuration
+const memoryStore = new session.MemoryStore();
+
 app.use(
   session({
-    store: sessionStore,
+    store: sessionStore || memoryStore,
     secret: process.env.SESSION_SECRET || 'some_dummy_session_secret_key',
     resave: false,
     saveUninitialized: false,

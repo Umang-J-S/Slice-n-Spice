@@ -70,7 +70,7 @@ export const updateItem = asyncHandler(async (req: Request, res: Response) => {
  */
 export const deleteItem = asyncHandler(async (req: Request, res: Response) => {
   const { id } = req.params;
-  const deletedItem = await Item.findByIdAndDelete(id);
+  const deletedItem = await Item.findByIdAndUpdate(id, { isDeleted: true }, { new: true });
   
   if (!deletedItem) {
     res.status(404);
@@ -78,7 +78,7 @@ export const deleteItem = asyncHandler(async (req: Request, res: Response) => {
   }
   
   // Clean up references
-  await Special.deleteMany({ item: id });
+  await Special.updateMany({ item: id }, { isActive: false });
   
   res.status(200).json({
     success: true,
@@ -210,8 +210,8 @@ export const deleteCategory = asyncHandler(async (req: Request, res: Response) =
     throw new Error('Category not found');
   }
   
-  // Remove items in this category
-  await Item.deleteMany({ category: id });
+  // Remove items in this category (soft delete)
+  await Item.updateMany({ category: id }, { isDeleted: true });
   
   res.status(200).json({
     success: true,
@@ -243,6 +243,7 @@ export const globalSearch = asyncHandler(async (req: Request, res: Response) => 
   // Search each collection in parallel
   const categoriesPromise = Category.find({ name: searchRegex }).limit(10);
   const itemsPromise = Item.find({
+    isDeleted: { $ne: true },
     $or: [
       { title: searchRegex },
       { description: searchRegex }
@@ -259,6 +260,7 @@ export const globalSearch = asyncHandler(async (req: Request, res: Response) => 
 
   // For Specials, find items matching the search query, then find Specials referencing them
   const matchingItems = await Item.find({
+    isDeleted: { $ne: true },
     $or: [
       { title: searchRegex },
       { description: searchRegex }

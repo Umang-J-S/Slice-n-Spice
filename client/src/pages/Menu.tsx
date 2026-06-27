@@ -118,6 +118,16 @@ export default function Menu() {
                                 }
                               });
                           }}
+                          onDeleteSuccess={() => {
+                            // Refetch the menu to remove deleted item
+                            fetch(`${import.meta.env.VITE_API_URL}/api/v1/menu/full`)
+                              .then((res) => res.json())
+                              .then((data) => {
+                                if (data.success && data.data) {
+                                  setCategories(data.data);
+                                }
+                              });
+                          }}
                         />
                       ))
                     ) : (

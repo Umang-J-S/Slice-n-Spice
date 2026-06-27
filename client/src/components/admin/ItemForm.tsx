@@ -206,6 +206,7 @@ export default function ItemForm({ initialData, isEditMode, onSuccess }: ItemFor
             type="number" 
             step="0.01" 
             {...register('price')} 
+            onFocus={(e) => e.target.select()}
             placeholder="0.00" 
             className="bg-white/5 border border-white/10 focus-visible:ring-amber-500/50 text-white placeholder:text-white/30 rounded-xl hover:bg-white/10 transition-colors h-12 px-4"
           />

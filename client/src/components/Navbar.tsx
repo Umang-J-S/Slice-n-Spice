@@ -4,12 +4,14 @@ import { useAuth } from "../context/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Menu, X } from "lucide-react";
 import logo from "../assets/logo.png";
+import ConfirmDialog from "./admin/ConfirmDialog";
 
 export default function Navbar() {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, logout } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
 
   // Smooth scroll helper
   const scrollToSection = (id: string) => {
@@ -104,7 +106,7 @@ export default function Navbar() {
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => logout()}
+                onClick={() => setIsLogoutModalOpen(true)}
                 className="text-white/60 hover:text-white hover:bg-white/10 rounded-full h-8 px-3"
               >
                 Logout
@@ -195,7 +197,7 @@ export default function Navbar() {
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => { setMobileMenuOpen(false); logout(); }}
+                  onClick={() => { setMobileMenuOpen(false); setIsLogoutModalOpen(true); }}
                   className="text-white/60 hover:text-red-400 hover:bg-red-400/10"
                 >
                   Logout
@@ -214,6 +216,18 @@ export default function Navbar() {
           </div>
         </div>
       )}
+
+      <ConfirmDialog
+        isOpen={isLogoutModalOpen}
+        onClose={() => setIsLogoutModalOpen(false)}
+        onConfirm={() => {
+          setIsLogoutModalOpen(false);
+          logout();
+        }}
+        title="Confirm Logout"
+        description="Are you sure you want to log out?"
+        confirmText="Logout"
+      />
     </nav>
   );
 }

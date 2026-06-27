@@ -85,7 +85,7 @@ export default function Preloader({ onComplete }: PreloaderProps) {
             <g transform="rotate(-20 50 50)">
               {/* BONE */}
               <path 
-                d="M 40 44 L 70 44 C 75 30, 92 35, 80 50 C 92 65, 75 70, 70 56 L 40 56 A 6 6 0 0 1 40 44 Z" 
+                d="M 40 44 L 70 44 C 75 30, 92 35, 80 50 C 92 65, 75 70, 70 56 L 40 56 C 35 70, 18 65, 30 50 C 18 35, 35 30, 40 44 Z" 
                 fill="#f8fafc" 
                 stroke="#cbd5e1"
                 strokeWidth="1"
@@ -94,6 +94,13 @@ export default function Preloader({ onComplete }: PreloaderProps) {
               {/* BONE DETAIL / SHADOW */}
               <path 
                 d="M 80 50 C 88 62, 76 68, 70 56" 
+                stroke="#e2e8f0" 
+                strokeWidth="2.5" 
+                strokeLinecap="round"
+                fill="none" 
+              />
+              <path 
+                d="M 30 50 C 22 62, 34 68, 40 56" 
                 stroke="#e2e8f0" 
                 strokeWidth="2.5" 
                 strokeLinecap="round"

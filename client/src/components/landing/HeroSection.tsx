@@ -9,6 +9,7 @@ import halalLogo from '../../assets/halal_badge.png'; // Using the transparent P
 interface HeroSectionProps {
   user: any; // We receive user from the parent component
   scrollToSection: (id: string) => void;
+  disableAnimation?: boolean;
 }
 
 /**
@@ -22,7 +23,7 @@ interface HeroSectionProps {
  * - `relative` positioning on the <section> is crucial here so absolute elements 
  *   (like the background container and Halal badge) are confined to its dimensions.
  */
-export default function HeroSection({ user, scrollToSection }: HeroSectionProps) {
+export default function HeroSection({ user, scrollToSection, disableAnimation = false }: HeroSectionProps) {
   const navigate = useNavigate();
   
   // Default fallback style to prevent hydration mismatch flashes, then randomly update
@@ -64,7 +65,7 @@ export default function HeroSection({ user, scrollToSection }: HeroSectionProps)
       </div>
 
       {/* Content Container */}
-      <div className="relative z-10 w-full max-w-6xl mx-auto px-6 py-20 flex flex-col items-start gap-6 mt-12 md:mt-0 animate-in fade-in duration-1000">
+      <div className={`relative z-10 w-full max-w-6xl mx-auto px-6 py-20 flex flex-col items-start gap-6 mt-12 md:mt-0 ${disableAnimation ? '' : 'animate-in fade-in duration-1000'}`}>
         <div className="inline-flex items-center gap-2 bg-amber-400/10 border border-amber-400/20 text-amber-300 text-xs px-3 py-1 rounded-full font-normal uppercase tracking-wider">
           <Sparkles className="h-3 w-3" />
           Premium Cloud Kitchen
@@ -114,7 +115,7 @@ export default function HeroSection({ user, scrollToSection }: HeroSectionProps)
 
       {/* Halal Badge Component */}
       {/* Absolute positioning pushes this element to the top right of the section */}
-      <div className="absolute top-20 sm:top-28 md:top-36 right-4 sm:right-6 md:right-16 lg:right-24 xl:right-32 z-20 animate-in fade-in zoom-in-75 duration-1000 delay-300">
+      <div className={`absolute top-20 sm:top-28 md:top-36 right-4 sm:right-6 md:right-16 lg:right-24 xl:right-32 z-20 ${disableAnimation ? '' : 'animate-in fade-in zoom-in-75 duration-1000 delay-300'}`}>
         <img 
           src={halalLogo} 
           alt="100% Halal Certified - Genuine Halal Food" 

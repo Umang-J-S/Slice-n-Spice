@@ -9,12 +9,16 @@ import AdminSearch from "../../components/admin/AdminSearch";
 import logo from "../../assets/logo.png";
 import { Home } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useState } from "react";
+import ConfirmDialog from "../../components/admin/ConfirmDialog";
 
 export default function AdminDashboard() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
 
   const handleLogout = async () => {
+    setIsLogoutModalOpen(false);
     await logout();
   };
 
@@ -69,7 +73,7 @@ export default function AdminDashboard() {
           <Button 
             variant="outline" 
             size="sm" 
-            onClick={handleLogout} 
+            onClick={() => setIsLogoutModalOpen(true)} 
             className="border-white/20 bg-white/5 hover:bg-amber-400 hover:text-black hover:border-amber-400 text-white transition-colors px-3"
           >
             Logout
@@ -122,6 +126,15 @@ export default function AdminDashboard() {
           </div>
         </main>
       </div>
+      
+      <ConfirmDialog
+        isOpen={isLogoutModalOpen}
+        onClose={() => setIsLogoutModalOpen(false)}
+        onConfirm={handleLogout}
+        title="Confirm Logout"
+        description="Are you sure you want to log out?"
+        confirmText="Logout"
+      />
     </div>
   );
 }

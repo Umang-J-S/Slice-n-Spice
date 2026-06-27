@@ -123,11 +123,7 @@ export default function Footer() {
                 Chef Panel
               </button>
             </li>
-            <li>
-              <button onClick={() => navigate("/admin/login")} className="hover:text-amber-400 transition-colors">
-                Admin Dashboard
-              </button>
-            </li>
+
           </ul>
         </div>
 

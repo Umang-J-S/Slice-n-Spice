@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useDebounce } from '../../hooks/useDebounce';
 import { Input } from '@/components/ui/input';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
+import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Search, Loader2, Utensils, ChefHat, Tag, Star, AlertCircle, Pencil, Trash2 } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import CategoryForm from './CategoryForm';
@@ -59,7 +59,7 @@ interface SearchResults {
   categories: CategoryResult[];
   items: ItemResult[];
   chefs: ChefResult[];
-  specials: SearchResult[];
+  specials: SpecialResult[];
 }
 
 export default function AdminSearch() {

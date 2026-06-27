@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Star, ChevronRight, Edit2, Trash2, MessageSquarePlus } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { Star, Edit2, Trash2, MessageSquarePlus } from 'lucide-react';
 import halalLogo from '../../assets/halal_badge.png';
 import { optimizeCloudinaryUrl } from '../../lib/cloudinary';
 import ConfirmDialog from '../admin/ConfirmDialog';

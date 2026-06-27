@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Edit2, Trash2 } from 'lucide-react';
 import halalLogo from '../../assets/halal_badge.png';
 import { optimizeCloudinaryUrl } from '../../lib/cloudinary';

@@ -7,8 +7,7 @@ import ChefForm from "../../components/admin/ChefForm";
 import SpecialForm from "../../components/admin/SpecialForm";
 import AdminSearch from "../../components/admin/AdminSearch";
 import logo from "../../assets/logo.png";
-import heroBg from "../../assets/hero_bg.png";
-import { Search, Home } from "lucide-react";
+import { Home } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 export default function AdminDashboard() {

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Star, ChevronRight, MessageSquarePlus } from 'lucide-react';
 import { optimizeCloudinaryUrl } from '../lib/cloudinary';
 import ReviewModal from './ReviewModal';

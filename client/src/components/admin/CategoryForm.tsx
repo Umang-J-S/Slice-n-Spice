@@ -19,7 +19,7 @@ interface CategoryFormProps {
 }
 
 export default function CategoryForm({ initialData, isEditMode, onSuccess }: CategoryFormProps = {}) {
-  const [isLoading, setIsLoading] = useState(false);
+  const [, setIsLoading] = useState(false);
   const { toast } = useToast();
 
   const {

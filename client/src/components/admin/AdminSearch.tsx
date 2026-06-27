@@ -2,7 +2,12 @@ import { useState, useEffect } from 'react';
 import { useDebounce } from '../../hooks/useDebounce';
 import { Input } from '@/components/ui/input';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
-import { Search, Loader2, Utensils, ChefHat, Tag, Star, AlertCircle } from 'lucide-react';
+import { Search, Loader2, Utensils, ChefHat, Tag, Star, AlertCircle, Pencil, Trash2 } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import CategoryForm from './CategoryForm';
+import ItemForm from './ItemForm';
+import SpecialForm from './SpecialForm';
+import { useToast } from '../../context/ToastContext';
 
 interface CategoryResult {
   _id: string;
@@ -22,6 +27,7 @@ interface ItemResult {
   dietaryAttributes?: {
     isVegetarian: boolean;
     isVegan: boolean;
+    isNonVeg?: boolean;
   };
 }
 
@@ -45,18 +51,21 @@ interface SpecialResult {
     photoUrl?: string;
   };
   date: string;
+  expiresAt?: string;
+  isActive?: boolean;
 }
 
 interface SearchResults {
   categories: CategoryResult[];
   items: ItemResult[];
   chefs: ChefResult[];
-  specials: SpecialResult[];
+  specials: SearchResult[];
 }
 
 export default function AdminSearch() {
   const [query, setQuery] = useState('');
   const debouncedQuery = useDebounce(query, 500);
+  const { toast } = useToast();
   const [results, setResults] = useState<SearchResults>({
     categories: [],
     items: [],
@@ -65,6 +74,27 @@ export default function AdminSearch() {
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [editingItem, setEditingItem] = useState<{type: 'category' | 'item' | 'special', data: any} | null>(null);
+
+  const handleDelete = async (id: string, type: 'categories' | 'items' | 'specials') => {
+    if (!window.confirm(`Are you sure you want to ${type === 'specials' ? 'remove this special' : 'delete this ' + (type === 'categories' ? 'category' : 'item')}?`)) return;
+    
+    try {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/v1/admin/${type}/${id}`, {
+        method: 'DELETE',
+        credentials: 'include'
+      });
+      if (!res.ok) throw new Error('Failed to delete');
+      
+      setResults(prev => ({
+        ...prev,
+        [type]: prev[type].filter((item: any) => item._id !== id)
+      }));
+      toast.success('Deleted successfully');
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to delete');
+    }
+  };
 
   useEffect(() => {
     const fetchResults = async () => {
@@ -77,7 +107,7 @@ export default function AdminSearch() {
       setError(null);
 
       try {
-        const res = await fetch(`http://localhost:5000/api/v1/admin/search?q=${encodeURIComponent(debouncedQuery)}`, {
+        const res = await fetch(`${import.meta.env.VITE_API_URL}/api/v1/admin/search?q=${encodeURIComponent(debouncedQuery)}`, {
           method: 'GET',
           credentials: 'include',
         });
@@ -109,56 +139,65 @@ export default function AdminSearch() {
     results.specials.length > 0;
 
   return (
-    <div className="space-y-6">
-      {/* Search Input Box */}
-      <div className="relative max-w-xl">
-        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-        <Input
-          type="text"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search categories, menu items, chefs, or specials..."
-          className="pl-10 h-11 pr-10 text-base"
-        />
-        {isLoading && (
-          <Loader2 className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-muted-foreground" />
-        )}
+    <div className="relative w-full z-50">
+      {/* Premium Search Input Box */}
+      <div className="relative w-full group z-50">
+        <div className="absolute inset-0 bg-gradient-to-r from-amber-400/20 to-amber-600/20 rounded-xl blur-md opacity-0 group-focus-within:opacity-100 transition-opacity duration-500"></div>
+        <div className="relative flex items-center bg-black/60 backdrop-blur-md border border-white/10 shadow-lg rounded-xl overflow-hidden transition-all duration-300 focus-within:shadow-amber-400/10 focus-within:border-amber-400/50">
+          <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-white/50 group-focus-within:text-amber-400 transition-colors duration-300" />
+          <Input
+            type="text"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search categories, items, chefs..."
+            className="pl-12 pr-12 h-12 w-full text-base bg-transparent border-none shadow-none focus-visible:ring-0 placeholder:text-white/40 text-white"
+          />
+          {isLoading && (
+            <Loader2 className="absolute right-4 top-1/2 h-5 w-5 -translate-y-1/2 animate-spin text-amber-400" />
+          )}
+          {query && !isLoading && (
+            <button 
+              onClick={() => setQuery('')}
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-white/40 hover:text-white transition-colors cursor-pointer"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+            </button>
+          )}
+        </div>
       </div>
 
-      {error && (
-        <div className="flex items-center gap-2 p-4 text-destructive border border-destructive/20 rounded-lg bg-destructive/10">
-          <AlertCircle className="h-5 w-5" />
-          <span className="text-sm font-medium">{error}</span>
-        </div>
-      )}
+      {/* Dropdown Results Area */}
+      {(query.trim() || isLoading) && (
+        <div className="absolute top-full left-0 right-0 mt-2 bg-neutral-950/95 backdrop-blur-xl border border-white/10 shadow-2xl rounded-2xl overflow-hidden z-50 max-h-[75vh] overflow-y-auto">
+          <div className="p-4 space-y-6">
+            {error && (
+              <div className="flex items-center gap-2 p-4 text-red-400 border border-red-500/20 rounded-xl bg-red-500/10">
+                <AlertCircle className="h-5 w-5" />
+                <span className="text-sm font-medium">{error}</span>
+              </div>
+            )}
 
-      {/* When no query is entered */}
-      {!query.trim() && !isLoading && (
-        <div className="text-center py-12 border border-dashed border-border rounded-lg bg-card text-muted-foreground">
-          <Search className="h-10 w-10 mx-auto mb-3 opacity-40" />
-          <p className="text-sm">Type anything to start searching the database.</p>
-        </div>
-      )}
+
 
       {/* When query is entered but nothing is found */}
       {query.trim() && !isLoading && !hasResults && !error && (
-        <div className="text-center py-12 border border-dashed border-border rounded-lg bg-card text-muted-foreground">
-          <AlertCircle className="h-10 w-10 mx-auto mb-3 opacity-40" />
+        <div className="text-center py-12 border border-dashed border-white/20 rounded-xl bg-white/5 text-white/50 shadow-inner">
+          <AlertCircle className="h-10 w-10 mx-auto mb-3 opacity-50 text-amber-400" />
           <p className="text-sm">No results match your search query "{query}".</p>
         </div>
       )}
 
       {/* Loading Skeletons */}
       {isLoading && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-pulse">
-          {[1, 2, 3, 4].map((i) => (
-            <Card key={i} className="border border-border">
-              <CardHeader className="space-y-2">
-                <div className="h-4 bg-muted rounded w-1/3"></div>
-                <div className="h-3 bg-muted rounded w-2/3"></div>
-              </CardHeader>
-              <CardContent className="h-16 bg-muted/50 rounded-b-xl"></CardContent>
-            </Card>
+        <div className="grid grid-cols-1 gap-4 animate-pulse">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="border border-white/10 bg-white/5 rounded-xl p-4">
+              <div className="space-y-3">
+                <div className="h-4 bg-white/10 rounded w-1/3"></div>
+                <div className="h-3 bg-white/10 rounded w-2/3"></div>
+              </div>
+              <div className="mt-4 h-16 bg-white/5 rounded-lg"></div>
+            </div>
           ))}
         </div>
       )}
@@ -169,21 +208,31 @@ export default function AdminSearch() {
           {/* 1. Category Section */}
           {results.categories.length > 0 && (
             <div className="space-y-4">
-              <div className="flex items-center gap-2 border-b border-border pb-2">
-                <Tag className="h-5 w-5 text-primary" />
-                <h4 className="text-lg font-semibold tracking-tight">Categories ({results.categories.length})</h4>
+              <div className="flex items-center gap-2 border-b border-white/10 pb-2">
+                <Tag className="h-5 w-5 text-amber-400" />
+                <h4 className="text-lg font-semibold tracking-tight text-white">Categories ({results.categories.length})</h4>
               </div>
-              <div className="grid grid-cols-1 gap-4">
+              <div className="grid grid-cols-1 gap-3">
                 {results.categories.map((cat) => (
-                  <Card key={cat._id} className="hover:shadow-md transition-shadow duration-200">
+                  <Card key={cat._id} className="bg-white/5 border-white/10 text-white hover:border-amber-400/50 hover:shadow-lg hover:shadow-amber-400/5 transition-all duration-300 rounded-xl relative group">
                     <CardHeader className="p-4 flex flex-row items-center justify-between space-y-0">
                       <div>
-                        <CardTitle className="text-base font-bold">{cat.name}</CardTitle>
-                        <CardDescription className="text-xs mt-1">ID: {cat._id}</CardDescription>
+                        <CardTitle className="text-base font-bold text-amber-400">{cat.name}</CardTitle>
+                        <CardDescription className="text-xs mt-1 text-white/50">ID: {cat._id}</CardDescription>
                       </div>
-                      <span className="inline-flex items-center rounded-md bg-primary/10 px-2 py-1 text-xs font-semibold text-primary ring-1 ring-inset ring-primary/20">
-                        Order: {cat.displayOrder}
-                      </span>
+                      <div className="flex flex-col items-end gap-2">
+                        <span className="inline-flex items-center rounded-md bg-amber-400/10 px-2 py-1 text-xs font-semibold text-amber-400 ring-1 ring-inset ring-amber-400/20">
+                          Order: {cat.displayOrder}
+                        </span>
+                        <div className="opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity flex gap-2">
+                          <button onClick={() => setEditingItem({ type: 'category', data: cat })} className="p-1.5 bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 rounded-md transition-colors" title="Edit">
+                            <Pencil className="h-4 w-4" />
+                          </button>
+                          <button onClick={() => handleDelete(cat._id, 'categories')} className="p-1.5 bg-red-500/10 text-red-400 hover:bg-red-500/20 rounded-md transition-colors" title="Delete">
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        </div>
+                      </div>
                     </CardHeader>
                   </Card>
                 ))}
@@ -194,22 +243,29 @@ export default function AdminSearch() {
           {/* 2. Menu Items Section */}
           {results.items.length > 0 && (
             <div className="space-y-4">
-              <div className="flex items-center gap-2 border-b border-border pb-2">
-                <Utensils className="h-5 w-5 text-primary" />
-                <h4 className="text-lg font-semibold tracking-tight">Menu Items ({results.items.length})</h4>
+              <div className="flex items-center gap-2 border-b border-white/10 pb-2">
+                <Utensils className="h-5 w-5 text-amber-400" />
+                <h4 className="text-lg font-semibold tracking-tight text-white">Menu Items ({results.items.length})</h4>
               </div>
-              <div className="grid grid-cols-1 gap-4">
+              <div className="grid grid-cols-1 gap-3">
                 {results.items.map((item) => (
-                  <Card key={item._id} className="overflow-hidden hover:shadow-md transition-shadow duration-200">
+                  <Card key={item._id} className="bg-white/5 border-white/10 text-white overflow-hidden hover:border-amber-400/50 hover:shadow-lg hover:shadow-amber-400/5 transition-all duration-300 rounded-xl relative group">
+                    <div className="absolute top-2 right-2 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity flex gap-2 z-10">
+                      <button onClick={() => setEditingItem({ type: 'item', data: item })} className="p-2 bg-black/60 backdrop-blur-md border border-white/10 text-blue-400 hover:text-blue-300 hover:bg-black/80 rounded-lg transition-colors shadow-lg" title="Edit">
+                        <Pencil className="h-4 w-4" />
+                      </button>
+                      <button onClick={() => handleDelete(item._id, 'items')} className="p-2 bg-black/60 backdrop-blur-md border border-white/10 text-red-400 hover:text-red-300 hover:bg-black/80 rounded-lg transition-colors shadow-lg" title="Delete">
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
                     <div className="flex flex-col sm:flex-row h-full">
                       {item.photoUrl && (
-                        <div className="sm:w-32 h-32 sm:h-auto overflow-hidden flex-shrink-0 bg-muted">
+                        <div className="sm:w-32 h-32 sm:h-auto overflow-hidden flex-shrink-0 bg-black/40">
                           <img
                             src={item.photoUrl}
                             alt={item.title}
-                            className="w-full h-full object-cover"
+                            className="w-full h-full object-cover opacity-90"
                             onError={(e) => {
-                              // If image fails to load, hide or replace
                               e.currentTarget.style.display = 'none';
                             }}
                           />
@@ -218,24 +274,29 @@ export default function AdminSearch() {
                       <div className="flex-1 p-4 flex flex-col justify-between">
                         <div className="space-y-1">
                           <div className="flex items-center justify-between gap-2">
-                            <CardTitle className="text-base font-bold">{item.title}</CardTitle>
-                            <span className="text-sm font-semibold text-primary">${item.price.toFixed(2)}</span>
+                            <CardTitle className="text-base font-bold text-amber-400">{item.title}</CardTitle>
+                            <span className="text-sm font-bold text-amber-400">${item.price.toFixed(2)}</span>
                           </div>
-                          <CardDescription className="line-clamp-2 text-xs">{item.description}</CardDescription>
+                          <CardDescription className="line-clamp-2 text-xs text-white/60">{item.description}</CardDescription>
                         </div>
                         <div className="mt-4 flex flex-wrap gap-2 items-center justify-between">
-                          <span className="inline-flex items-center rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
+                          <span className="inline-flex items-center rounded-full bg-white/10 px-2 py-0.5 text-xs font-medium text-white/80">
                             {item.category?.name || 'Uncategorized'}
                           </span>
                           <div className="flex gap-1.5">
                             {item.dietaryAttributes?.isVegetarian && (
-                              <span className="inline-flex items-center rounded-full bg-emerald-500/10 px-2 py-0.5 text-xs font-medium text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                              <span className="inline-flex items-center rounded-full bg-emerald-500/10 px-2 py-0.5 text-xs font-medium text-emerald-400 border border-emerald-500/20">
                                 Veg
                               </span>
                             )}
                             {item.dietaryAttributes?.isVegan && (
-                              <span className="inline-flex items-center rounded-full bg-green-500/10 px-2 py-0.5 text-xs font-medium text-green-600 dark:text-green-400 border border-green-500/20">
+                              <span className="inline-flex items-center rounded-full bg-green-500/10 px-2 py-0.5 text-xs font-medium text-green-400 border border-green-500/20">
                                 Vegan
+                              </span>
+                            )}
+                            {item.dietaryAttributes?.isNonVeg && (
+                              <span className="inline-flex items-center rounded-full bg-red-500/10 px-2 py-0.5 text-xs font-medium text-red-400 border border-red-500/20">
+                                Non-Veg
                               </span>
                             )}
                           </div>
@@ -251,42 +312,42 @@ export default function AdminSearch() {
           {/* 3. Chefs Section */}
           {results.chefs.length > 0 && (
             <div className="space-y-4">
-              <div className="flex items-center gap-2 border-b border-border pb-2">
-                <ChefHat className="h-5 w-5 text-primary" />
-                <h4 className="text-lg font-semibold tracking-tight">Chefs ({results.chefs.length})</h4>
+              <div className="flex items-center gap-2 border-b border-white/10 pb-2">
+                <ChefHat className="h-5 w-5 text-amber-400" />
+                <h4 className="text-lg font-semibold tracking-tight text-white">Chefs ({results.chefs.length})</h4>
               </div>
-              <div className="grid grid-cols-1 gap-4">
+              <div className="grid grid-cols-1 gap-3">
                 {results.chefs.map((chef) => (
-                  <Card key={chef._id} className="overflow-hidden hover:shadow-md transition-shadow duration-200">
+                  <Card key={chef._id} className="bg-white/5 border-white/10 text-white overflow-hidden hover:border-amber-400/50 hover:shadow-lg hover:shadow-amber-400/5 transition-all duration-300 rounded-xl">
                     <div className="flex flex-col sm:flex-row h-full">
                       {chef.photoUrl && (
-                        <div className="sm:w-32 h-32 sm:h-auto overflow-hidden flex-shrink-0 bg-muted">
+                        <div className="sm:w-32 h-32 sm:h-auto overflow-hidden flex-shrink-0 bg-black/40">
                           <img
                             src={chef.photoUrl}
                             alt={chef.name}
-                            className="w-full h-full object-cover"
+                            className="w-full h-full object-cover opacity-90"
                           />
                         </div>
                       )}
                       <div className="flex-1 p-4 flex flex-col justify-between">
                         <div className="space-y-1">
                           <div className="flex items-center justify-between gap-2">
-                            <CardTitle className="text-base font-bold">{chef.name}</CardTitle>
-                            <span className="text-xs font-medium text-muted-foreground">{chef.role}</span>
+                            <CardTitle className="text-base font-bold text-amber-400">{chef.name}</CardTitle>
+                            <span className="text-xs font-semibold text-white/70">{chef.role}</span>
                           </div>
-                          <CardDescription className="line-clamp-2 text-xs">{chef.bio}</CardDescription>
+                          <CardDescription className="line-clamp-2 text-xs text-white/60">{chef.bio}</CardDescription>
                         </div>
                         <div className="mt-4 space-y-2">
                           <div className="flex flex-wrap gap-1">
                             {chef.specialties.map((spec, idx) => (
-                              <span key={idx} className="inline-flex items-center rounded bg-primary/10 px-1.5 py-0.5 text-[10px] font-semibold text-primary">
+                              <span key={idx} className="inline-flex items-center rounded bg-amber-400/10 border border-amber-400/20 px-1.5 py-0.5 text-[10px] font-bold text-amber-400">
                                 {spec}
                               </span>
                             ))}
                           </div>
                           {chef.experienceYears !== undefined && (
-                            <p className="text-xs text-muted-foreground font-medium">
-                              Experience: <strong className="text-foreground">{chef.experienceYears} Years</strong>
+                            <p className="text-xs text-white/50 font-medium">
+                              Experience: <strong className="text-white">{chef.experienceYears} Years</strong>
                             </p>
                           )}
                         </div>
@@ -301,29 +362,37 @@ export default function AdminSearch() {
           {/* 4. Today's Specials Section */}
           {results.specials.length > 0 && (
             <div className="space-y-4">
-              <div className="flex items-center gap-2 border-b border-border pb-2">
-                <Star className="h-5 w-5 text-primary" />
-                <h4 className="text-lg font-semibold tracking-tight">Today's Specials ({results.specials.length})</h4>
+              <div className="flex items-center gap-2 border-b border-white/10 pb-2">
+                <Star className="h-5 w-5 text-amber-400" />
+                <h4 className="text-lg font-semibold tracking-tight text-white">Today's Specials ({results.specials.length})</h4>
               </div>
-              <div className="grid grid-cols-1 gap-4">
+              <div className="grid grid-cols-1 gap-3">
                 {results.specials.map((special) => (
-                  <Card key={special._id} className="overflow-hidden hover:shadow-md transition-shadow duration-200">
+                  <Card key={special._id} className="bg-white/5 border-white/10 text-white overflow-hidden hover:border-amber-400/50 hover:shadow-lg hover:shadow-amber-400/5 transition-all duration-300 rounded-xl relative group">
+                    <div className="absolute top-2 right-2 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity flex gap-2 z-10">
+                      <button onClick={() => setEditingItem({ type: 'special', data: special })} className="p-2 bg-black/60 backdrop-blur-md border border-white/10 text-blue-400 hover:text-blue-300 hover:bg-black/80 rounded-lg transition-colors shadow-lg" title="Edit Special Settings">
+                        <Pencil className="h-4 w-4" />
+                      </button>
+                      <button onClick={() => handleDelete(special._id, 'specials')} className="p-2 bg-black/60 backdrop-blur-md border border-white/10 text-red-400 hover:text-red-300 hover:bg-black/80 rounded-lg transition-colors shadow-lg" title="Remove Special">
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
                     {special.item ? (
                       <div className="flex flex-col h-full justify-between p-4">
                         <div className="flex gap-3">
                           {special.item.photoUrl && (
-                            <div className="w-12 h-12 rounded overflow-hidden flex-shrink-0 bg-muted">
-                              <img src={special.item.photoUrl} alt={special.item.title} className="w-full h-full object-cover" />
+                            <div className="w-12 h-12 rounded overflow-hidden flex-shrink-0 bg-black/40">
+                              <img src={special.item.photoUrl} alt={special.item.title} className="w-full h-full object-cover opacity-90" />
                             </div>
                           )}
                           <div className="space-y-0.5">
-                            <h5 className="font-bold text-sm leading-snug">{special.item.title}</h5>
-                            <p className="text-xs text-primary font-semibold">${special.item.price.toFixed(2)}</p>
+                            <h5 className="font-bold text-sm leading-snug text-amber-400">{special.item.title}</h5>
+                            <p className="text-xs text-white/70 font-semibold">${special.item.price.toFixed(2)}</p>
                           </div>
                         </div>
-                        <div className="mt-4 pt-2 border-t border-border flex items-center justify-between text-[11px] text-muted-foreground">
+                        <div className="mt-4 pt-2 border-t border-white/10 flex items-center justify-between text-[11px] text-white/50">
                           <span>Special Date:</span>
-                          <strong className="text-foreground">
+                          <strong className="text-white">
                             {new Date(special.date).toLocaleDateString(undefined, {
                               month: 'short',
                               day: 'numeric',
@@ -333,7 +402,7 @@ export default function AdminSearch() {
                         </div>
                       </div>
                     ) : (
-                      <div className="p-4 text-xs text-muted-foreground">
+                      <div className="p-4 text-xs text-white/50">
                         Linked item has been deleted.
                       </div>
                     )}
@@ -344,6 +413,46 @@ export default function AdminSearch() {
           )}
         </div>
       )}
+          </div>
+        </div>
+      )}
+
+      {/* Edit Modal */}
+      <Dialog open={!!editingItem} onOpenChange={(open) => !open && setEditingItem(null)}>
+        <DialogContent className="bg-neutral-950 border border-white/10 text-white sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle className="text-amber-400 font-bold">
+              Edit {editingItem?.type === 'category' ? 'Category' : editingItem?.type === 'special' ? 'Special' : 'Item'}
+            </DialogTitle>
+            <DialogDescription className="text-white/60">
+              Make changes to this {editingItem?.type} below.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="mt-4 max-h-[70vh] overflow-y-auto px-1">
+            {editingItem?.type === 'category' && (
+              <CategoryForm 
+                initialData={editingItem.data} 
+                isEditMode={true} 
+                onSuccess={() => setEditingItem(null)} 
+              />
+            )}
+            {editingItem?.type === 'item' && (
+              <ItemForm 
+                initialData={editingItem.data} 
+                isEditMode={true} 
+                onSuccess={() => setEditingItem(null)} 
+              />
+            )}
+            {editingItem?.type === 'special' && (
+              <SpecialForm 
+                initialData={editingItem.data} 
+                isEditMode={true} 
+                onSuccess={() => setEditingItem(null)} 
+              />
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

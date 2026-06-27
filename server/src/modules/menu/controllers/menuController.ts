@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import mongoose from 'mongoose';
-import { Category, Item, Special } from '../../../models/menuModel';
+import { Category, Item, Special, Review } from '../../../models/menuModel';
 import asyncHandler from '../../../utils/asyncHandler';
 
 /**
@@ -13,9 +13,28 @@ export const getFullMenu = asyncHandler(async (req: Request, res: Response) => {
     { $sort: { displayOrder: 1 } },
     {
       $lookup: {
-        from: 'items', // This matches the auto-pluralized name of the 'Item' model
-        localField: '_id',
-        foreignField: 'category',
+        from: 'items',
+        let: { categoryId: '$_id' },
+        pipeline: [
+          { $match: { $expr: { $eq: ['$category', '$$categoryId'] } } },
+          {
+            $lookup: {
+              from: 'reviews',
+              localField: '_id',
+              foreignField: 'item',
+              as: 'reviews',
+            },
+          },
+          {
+            $addFields: {
+              avgRating: { $avg: '$reviews.rating' },
+              reviewCount: { $size: '$reviews' },
+            },
+          },
+          {
+            $project: { reviews: 0 },
+          },
+        ],
         as: 'items',
       },
     },
@@ -81,7 +100,14 @@ export const getItemById = asyncHandler(async (req: Request, res: Response) => {
  * @access  Public
  */
 export const getSpecials = asyncHandler(async (req: Request, res: Response) => {
-  const specials = await Special.find().populate({
+  const specials = await Special.find({
+    isActive: true,
+    $or: [
+      { expiresAt: { $gt: new Date() } },
+      { expiresAt: null },
+      { expiresAt: { $exists: false } }
+    ]
+  }).populate({
     path: 'item',
     populate: { path: 'category' }
   });
@@ -89,5 +115,141 @@ export const getSpecials = asyncHandler(async (req: Request, res: Response) => {
   res.status(200).json({
     success: true,
     data: specials,
+  });
+});
+
+/**
+ * @desc    Get top 8 highest-rated items
+ * @route   GET /api/v1/menu/top-rated
+ * @access  Public
+ */
+export const getTopRatedItems = asyncHandler(async (req: Request, res: Response) => {
+  const topRated = await Item.aggregate([
+    {
+      $lookup: {
+        from: 'reviews',
+        localField: '_id',
+        foreignField: 'item',
+        as: 'reviews',
+      },
+    },
+    {
+      $addFields: {
+        avgRating: { $avg: '$reviews.rating' },
+        reviewCount: { $size: '$reviews' },
+      },
+    },
+    {
+      $sort: { avgRating: -1, reviewCount: -1 },
+    },
+    { $limit: 8 },
+  ]);
+
+  res.status(200).json({
+    success: true,
+    data: topRated,
+  });
+});
+
+/**
+ * @desc    Submit a review for an item
+ * @route   POST /api/v1/menu/items/:itemId/reviews
+ * @access  Private
+ */
+export const addReview = asyncHandler(async (req: Request, res: Response) => {
+  const itemId = req.params.itemId as string;
+  const { rating, reviewText } = req.body;
+  const user = (req as any).user;
+
+  if (!mongoose.Types.ObjectId.isValid(itemId)) {
+    res.status(400);
+    throw new Error('Invalid item ID');
+  }
+
+  if (!rating || rating < 1 || rating > 5) {
+    res.status(400);
+    throw new Error('Please provide a valid rating between 1 and 5');
+  }
+
+  // Check if item exists
+  const item = await Item.findById(itemId);
+  if (!item) {
+    res.status(404);
+    throw new Error('Item not found');
+  }
+
+  // Check if user already reviewed this item
+  const existingReview = await Review.findOne({ item: itemId, user: user._id });
+  if (existingReview) {
+    existingReview.rating = rating;
+    existingReview.reviewText = reviewText;
+    await existingReview.save();
+    
+    return res.status(200).json({
+      success: true,
+      data: existingReview,
+    });
+  }
+
+  const review = await Review.create({
+    item: itemId,
+    user: user._id,
+    rating,
+    reviewText,
+  });
+
+  res.status(201).json({
+    success: true,
+    data: review,
+  });
+});
+
+/**
+ * @desc    Get current user's review for an item
+ * @route   GET /api/v1/menu/items/:itemId/reviews/me
+ * @access  Private
+ */
+export const getMyReview = asyncHandler(async (req: Request, res: Response) => {
+  const itemId = req.params.itemId as string;
+  const user = (req as any).user;
+
+  if (!mongoose.Types.ObjectId.isValid(itemId)) {
+    res.status(400);
+    throw new Error('Invalid item ID');
+  }
+
+  const review = await Review.findOne({ item: itemId, user: user._id });
+
+  res.status(200).json({
+    success: true,
+    data: review || null,
+  });
+});
+
+/**
+ * @desc    Get all reviews for an item
+ * @route   GET /api/v1/menu/items/:itemId/reviews
+ * @access  Public
+ */
+export const getItemReviews = asyncHandler(async (req: Request, res: Response) => {
+  const itemId = req.params.itemId as string;
+
+  if (!mongoose.Types.ObjectId.isValid(itemId)) {
+    res.status(400);
+    throw new Error('Invalid item ID');
+  }
+
+  const reviews = await Review.find({ item: itemId }).populate('user', 'name email').sort({ date: -1 });
+
+  // Calculate average dynamically if needed
+  const avgRating = reviews.length > 0 
+    ? reviews.reduce((acc, r) => acc + r.rating, 0) / reviews.length 
+    : 0;
+
+  res.status(200).json({
+    success: true,
+    count: reviews.length,
+    avgRating,
+    data: reviews,
   });
 });

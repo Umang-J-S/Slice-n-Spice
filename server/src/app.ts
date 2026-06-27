@@ -1,13 +1,40 @@
 import express, { Express, Request, Response } from 'express';
 import cors from 'cors';
+import path from 'path';
 import session from 'express-session';
 import passport from 'passport';
+import helmet from 'helmet';
+import hpp from 'hpp';
+import compression from 'compression';
+import rateLimit from 'express-rate-limit';
 import { notFound, errorHandler } from './middlewares/errorMiddleware';
 import { buildApiRouter } from './routes';
 import { sessionStore } from './services/redis';
 import './services/passport';
 
 const app: Express = express();
+
+// TODO: Remove this compression middleware when moving to real production on Amazon EC2 / NGINX
+// as NGINX handles compression much more efficiently. Keep for Render testing.
+app.use(compression());
+
+// Security middlewares
+app.use(helmet());
+// Optional: Configure helmet to allow images from other domains if you are using Cloudinary or similar
+app.use(helmet.crossOriginResourcePolicy({ policy: "cross-origin" }));
+
+// Rate limiting
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // Limit each IP to 100 requests per `window` (here, per 15 minutes)
+  standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
+  legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+  message: 'Too many requests from this IP, please try again after 15 minutes',
+});
+app.use('/api', limiter);
+
+app.use(express.urlencoded({ extended: true }));
+app.use(hpp());
 
 if (process.env.NODE_ENV === 'production') {
   app.set('trust proxy', 1);
@@ -42,6 +69,9 @@ app.use(
 app.use(passport.initialize());
 app.use(passport.session());
 
+
+// Serve uploads statically
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 app.use('/api/v1', buildApiRouter());
 

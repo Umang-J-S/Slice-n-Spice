@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&family=Playfair+Display:ital,wght@1,600;1,700&family=Lora:ital,wght@1,600;1,700&family=Merriweather:ital,wght@1,700;1,900&family=Satisfy&family=Great+Vibes&family=Lobster&family=Oswald:wght@500;700&display=swap');
 @import "tailwindcss";
 
 @plugin "tailwindcss-animate";
@@ -62,33 +63,56 @@
     --radius: 0.5rem;
   }
   .dark {
-    --background: oklch(0.145 0 0);
-    --foreground: oklch(0.985 0 0);
-    --card: oklch(0.145 0 0);
-    --card-foreground: oklch(0.985 0 0);
-    --popover: oklch(0.145 0 0);
-    --popover-foreground: oklch(0.985 0 0);
-    --primary: oklch(0.985 0 0);
-    --primary-foreground: oklch(0.205 0 0);
-    --secondary: oklch(0.269 0 0);
-    --secondary-foreground: oklch(0.985 0 0);
-    --muted: oklch(0.269 0 0);
-    --muted-foreground: oklch(0.708 0 0);
-    --accent: oklch(0.269 0 0);
-    --accent-foreground: oklch(0.985 0 0);
+    --background: transparent;
+    --foreground: oklch(1 0 0);
+    --card: oklch(0 0 0 / 0.2);
+    --card-foreground: oklch(1 0 0);
+    --popover: oklch(0 0 0 / 0.8);
+    --popover-foreground: oklch(1 0 0);
+    --primary: oklch(0.828 0.189 84.429);
+    --primary-foreground: oklch(0 0 0);
+    --secondary: oklch(1 0 0 / 0.1);
+    --secondary-foreground: oklch(1 0 0);
+    --muted: oklch(1 0 0 / 0.1);
+    --muted-foreground: oklch(1 0 0 / 0.6);
+    --accent: oklch(0.828 0.189 84.429 / 0.2);
+    --accent-foreground: oklch(0.828 0.189 84.429);
     --destructive: oklch(0.396 0.141 25.723);
     --destructive-foreground: oklch(0.637 0.237 25.331);
-    --border: oklch(0.269 0 0);
-    --input: oklch(0.269 0 0);
-    --ring: oklch(0.439 0 0);
+    --border: oklch(1 0 0 / 0.1);
+    --input: oklch(1 0 0 / 0.05);
+    --ring: oklch(0.828 0.189 84.429);
   }
 }
 
 @layer base {
   * {
     @apply border-border outline-ring/50;
+    /* Firefox custom scrollbar */
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
+  }
+  html {
+    scroll-behavior: smooth;
   }
   body {
     @apply bg-background text-foreground;
+  }
+
+  /* WebKit Custom Scrollbar (Chrome, Safari, Edge) */
+  ::-webkit-scrollbar {
+    width: 12px; /* Slightly wider for the main page */
+    height: 12px;
+  }
+  ::-webkit-scrollbar-track {
+    background: #0a0a0a; /* Deep neutral black track */
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #262626; /* neutral-800 */
+    border-radius: 10px;
+    border: 3px solid #0a0a0a; /* Creates a padding effect around the thumb */
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #fbbf24; /* Amber-400 theme color */
   }
 }

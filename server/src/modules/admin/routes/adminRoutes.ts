@@ -1,5 +1,5 @@
 import express from 'express';
-import { getDashboardStats, addItem, addSpecial, addCategory, updateItem, deleteItem, updateCategory, deleteCategory, globalSearch } from '../controllers/adminController';
+import { getDashboardStats, addItem, addSpecial, updateSpecial, deleteSpecial, addCategory, updateItem, deleteItem, updateCategory, deleteCategory, globalSearch, uploadPhoto } from '../controllers/adminController';
 import { createChef, updateChef, deleteChef } from '../controllers/adminChefController';
 import { isAuthenticated, isAdmin } from '../../auth/middlewares/authMiddleware';
 import { validateRequest } from '../../../middlewares/validateRequest';
@@ -7,6 +7,7 @@ import { addItemSchema, updateItemSchema } from '../validations/itemValidation';
 import { addSpecialSchema } from '../validations/specialValidation';
 import { addCategorySchema, updateCategorySchema } from '../validations/categoryValidation';
 import { createChefSchema, updateChefSchema } from '../validations/chefValidation';
+import { upload } from '../../../middlewares/uploadMiddleware';
 
 const router = express.Router();
 
@@ -22,6 +23,10 @@ router.get('/dashboard', getDashboardStats);
 // @route   GET /api/v1/admin/search
 router.get('/search', globalSearch);
 
+// @desc    Upload a photo
+// @route   POST /api/v1/admin/upload
+router.post('/upload', upload.single('photo'), uploadPhoto);
+
 // @desc    Add a new menu item
 // @route   POST /api/v1/admin/items
 // /* TODO: Admin Authentication Middleware - Handled globally above */
@@ -30,6 +35,14 @@ router.post('/items', validateRequest(addItemSchema), addItem);
 // @desc    Add a new special item
 // @route   POST /api/v1/admin/specials
 router.post('/specials', validateRequest(addSpecialSchema), addSpecial);
+
+// @desc    Update a special item
+// @route   PUT /api/v1/admin/specials/:id
+router.put('/specials/:id', updateSpecial);
+
+// @desc    Delete a special item
+// @route   DELETE /api/v1/admin/specials/:id
+router.delete('/specials/:id', deleteSpecial);
 
 // @desc    Add a new category
 // @route   POST /api/v1/admin/categories

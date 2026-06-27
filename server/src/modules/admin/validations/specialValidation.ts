@@ -6,5 +6,6 @@ export const addSpecialSchema = z.object({
       message: 'Item ID is required',
     }).regex(/^[0-9a-fA-F]{24}$/, 'Invalid item ID format'),
     date: z.string().datetime({ message: 'Invalid date format' }).optional(), // Optional, defaults to now in schema
+    expiresAt: z.string().datetime({ message: 'Invalid expiration date format' }).optional().nullable(),
   }),
 });

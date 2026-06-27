@@ -90,7 +90,7 @@ export const deleteItem = asyncHandler(async (req: Request, res: Response) => {
  * Controller to add a special item.
  */
 export const addSpecial = asyncHandler(async (req: Request, res: Response) => {
-  const { item, date } = req.body;
+  const { item, date, expiresAt } = req.body;
 
   // Check if the item actually exists
   const itemExists = await Item.findById(item);
@@ -99,9 +99,17 @@ export const addSpecial = asyncHandler(async (req: Request, res: Response) => {
     throw new Error('Item not found');
   }
 
+  // Prevent duplicate specials
+  const existingSpecial = await Special.findOne({ item });
+  if (existingSpecial) {
+    res.status(400);
+    throw new Error('This item is already listed as a Special.');
+  }
+
   const newSpecial = new Special({
     item,
-    date: date ? new Date(date) : undefined // Mongoose schema defaults to Date.now if undefined
+    date: date ? new Date(date) : undefined, // Mongoose schema defaults to Date.now if undefined
+    expiresAt: expiresAt ? new Date(expiresAt) : undefined
   });
 
   const savedSpecial = await newSpecial.save();
@@ -111,6 +119,44 @@ export const addSpecial = asyncHandler(async (req: Request, res: Response) => {
     message: 'Special item added successfully',
   });
   
+});
+
+/**
+ * Controller to update a special item.
+ */
+export const updateSpecial = asyncHandler(async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const updatedSpecial = await Special.findByIdAndUpdate(id, req.body, { new: true, runValidators: true });
+  
+  if (!updatedSpecial) {
+    res.status(404);
+    throw new Error('Special not found');
+  }
+  
+  res.status(200).json({
+    success: true,
+    message: 'Special updated successfully',
+    data: updatedSpecial,
+  });
+});
+
+/**
+ * Controller to delete (soft delete) a special item.
+ */
+export const deleteSpecial = asyncHandler(async (req: Request, res: Response) => {
+  const { id } = req.params;
+  // Soft delete by setting isActive to false
+  const deletedSpecial = await Special.findByIdAndUpdate(id, { isActive: false }, { new: true });
+  
+  if (!deletedSpecial) {
+    res.status(404);
+    throw new Error('Special not found');
+  }
+  
+  res.status(200).json({
+    success: true,
+    message: 'Special removed successfully',
+  });
 });
 
 /**
@@ -236,6 +282,27 @@ export const globalSearch = asyncHandler(async (req: Request, res: Response) => 
       chefs,
       specials
     }
+  });
+});
+
+/**
+ * Controller to upload a photo to Cloudinary.
+ */
+export const uploadPhoto = asyncHandler(async (req: Request, res: Response) => {
+  if (!req.file) {
+    res.status(400);
+    throw new Error('No file uploaded');
+  }
+
+  // With multer-storage-cloudinary, req.file.path contains the Cloudinary URL
+  const photoUrl = req.file.path;
+
+  res.status(200).json({
+    success: true,
+    message: 'Photo uploaded successfully',
+    data: {
+      photoUrl,
+    },
   });
 });
 

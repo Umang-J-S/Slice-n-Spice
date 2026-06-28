@@ -96,12 +96,11 @@ export default function SpecialsSection({ activeSpecials, isLoading, user, refre
               : "md:rotate-[3deg] md:translate-y-2 hover:rotate-0";
 
           const specItem = special.item || special; // support both DB models and fallback flat items
-          const isLastOdd = activeSpecials.length % 2 !== 0 && index === activeSpecials.length - 1;
 
           return (
             <div
               key={special._id || index}
-              className={`transition-all duration-300 ease-out transform ${rotationClass} bg-gradient-to-tr from-neutral-950 to-neutral-900 border border-white/10 rounded-xl overflow-hidden hover:scale-105 hover:border-amber-400 hover:shadow-xl hover:shadow-amber-400/5 group/card relative ${isLastOdd ? 'md:col-span-2 lg:col-span-4 max-w-sm mx-auto w-full' : ''}`}
+              className={`transition-all duration-300 ease-out transform ${rotationClass} bg-gradient-to-tr from-neutral-950 to-neutral-900 border border-white/10 rounded-xl overflow-hidden hover:scale-105 hover:border-amber-400 hover:shadow-xl hover:shadow-amber-400/5 group/card relative`}
             >
               {specItem.photoUrl && (
                 <div className="h-44 overflow-hidden relative">
@@ -169,6 +168,7 @@ export default function SpecialsSection({ activeSpecials, isLoading, user, refre
         title="Remove Special"
         description={`Are you sure you want to remove "${itemToDelete?.item?.title || 'this item'}" from Today's Specials?`}
         isLoading={isDeleting}
+        confirmText="Delete from Special"
       />
 
       {itemToEdit && (

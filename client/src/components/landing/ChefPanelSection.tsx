@@ -24,25 +24,58 @@ export default function ChefPanelSection({ chefs, isLoading }: ChefPanelSectionP
   const [currentChefIdx, setCurrentChefIdx] = useState(0);
   const [chefFade, setChefFade] = useState(true);
 
-  // 12-second Chef Cycling Effect
+  // Swipe State
+  const [touchStartX, setTouchStartX] = useState<number | null>(null);
+  const [touchEndX, setTouchEndX] = useState<number | null>(null);
+
+  // 12-second Chef Cycling Effect (Auto-rotates, resets on manual interaction)
   useEffect(() => {
     if (chefs.length === 0) return;
 
-    const interval = setInterval(() => {
-      // 1. Trigger the fade out transition
+    const timer = setTimeout(() => {
       setChefFade(false);
-      
-      // 2. Wait for the CSS transition to almost finish (600ms) before changing data
       setTimeout(() => {
         setCurrentChefIdx((prev) => (prev + 1) % chefs.length);
-        // 3. Trigger the fade in transition with the new data
         setChefFade(true);
       }, 600); 
-    }, 12000); // 12 seconds per chef
+    }, 12000);
 
-    // Always clear intervals on unmount to prevent memory leaks and unexpected behavior
-    return () => clearInterval(interval);
-  }, [chefs]);
+    return () => clearTimeout(timer);
+  }, [chefs, currentChefIdx]); // Dependency on currentChefIdx resets timer on manual interaction
+
+  const handleManualChange = (newIdx: number) => {
+    if (newIdx === currentChefIdx) return;
+    setChefFade(false);
+    setTimeout(() => {
+      setCurrentChefIdx(newIdx);
+      setChefFade(true);
+    }, 300);
+  };
+
+  const minSwipeDistance = 50;
+
+  const onTouchStart = (e: React.TouchEvent) => {
+    setTouchEndX(null);
+    setTouchStartX(e.targetTouches[0].clientX);
+  };
+
+  const onTouchMove = (e: React.TouchEvent) => {
+    setTouchEndX(e.targetTouches[0].clientX);
+  };
+
+  const onTouchEnd = () => {
+    if (!touchStartX || !touchEndX) return;
+    const distance = touchStartX - touchEndX;
+    const isLeftSwipe = distance > minSwipeDistance;
+    const isRightSwipe = distance < -minSwipeDistance;
+
+    if (isLeftSwipe || isRightSwipe) {
+      const nextIdx = isLeftSwipe 
+        ? (currentChefIdx + 1) % chefs.length 
+        : (currentChefIdx - 1 + chefs.length) % chefs.length;
+      handleManualChange(nextIdx);
+    }
+  };
 
   const currentChef = chefs[currentChefIdx] || null;
 
@@ -79,6 +112,9 @@ export default function ChefPanelSection({ chefs, isLoading }: ChefPanelSectionP
             className={`transition-all duration-700 ease-in-out ${
               chefFade ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-4"
             }`}
+            onTouchStart={onTouchStart}
+            onTouchMove={onTouchMove}
+            onTouchEnd={onTouchEnd}
           >
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
               {/* Chef Photo Frame */}
@@ -145,13 +181,7 @@ export default function ChefPanelSection({ chefs, isLoading }: ChefPanelSectionP
                   {chefs.map((_, idx) => (
                     <button
                       key={idx}
-                      onClick={() => {
-                        setChefFade(false);
-                        setTimeout(() => {
-                          setCurrentChefIdx(idx);
-                          setChefFade(true);
-                        }, 300); // Faster manual transition
-                      }}
+                      onClick={() => handleManualChange(idx)}
                       className={`h-1.5 rounded-full transition-all duration-300 ${
                         idx === currentChefIdx ? "w-8 bg-amber-400" : "w-2 bg-white/20"
                       }`}

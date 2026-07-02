@@ -6,6 +6,8 @@ import ConfirmDialog from './admin/ConfirmDialog';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '../context/ToastContext';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { adminApi } from '../api';
 
 interface DishCardProps {
   _id?: string;
@@ -24,8 +26,8 @@ export default function DishCard({ _id, title, price, description, image, rating
   const displayRating = Number(rating) > 0 ? Number(rating).toFixed(1) : "New";
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -43,26 +45,26 @@ export default function DishCard({ _id, title, price, description, image, rating
     setIsDeleteDialogOpen(true);
   };
 
-  const confirmDelete = async () => {
-    setIsDeleting(true);
-    try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/v1/admin/items/${_id}`, {
-        method: 'DELETE',
-        credentials: 'include'
-      });
-      if (!res.ok) throw new Error('Failed to delete item');
-      
+  const deleteItemMutation = useMutation({
+    mutationFn: (id: string) => adminApi.deleteItem(id),
+    onSuccess: () => {
       toast.success('Item deleted successfully');
       setIsDeleteDialogOpen(false);
+      queryClient.invalidateQueries({ queryKey: ['menu', 'full'] });
+      queryClient.invalidateQueries({ queryKey: ['specials'] });
+      queryClient.invalidateQueries({ queryKey: ['top-rated'] });
       if (onDeleteSuccess) {
         onDeleteSuccess();
-      } else {
-        window.location.reload();
       }
-    } catch (err: any) {
+    },
+    onError: (err: any) => {
       toast.error(err.message || 'Failed to delete item');
-    } finally {
-      setIsDeleting(false);
+    }
+  });
+
+  const confirmDelete = () => {
+    if (_id) {
+      deleteItemMutation.mutate(_id);
     }
   };
 
@@ -139,7 +141,7 @@ export default function DishCard({ _id, title, price, description, image, rating
           onConfirm={confirmDelete}
           title="Delete Menu Item"
           description={`Are you sure you want to delete "${title}"? This will hide it from the menu.`}
-          isLoading={isDeleting}
+          isLoading={deleteItemMutation.isPending}
           confirmText="Delete Item"
         />
       )}

@@ -1,7 +1,9 @@
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { Helmet } from 'react-helmet-async';
+import { useQuery } from '@tanstack/react-query';
+import { menuApi } from '../api';
 
 // Components
 import Navbar from "../components/Navbar";
@@ -25,39 +27,33 @@ import ChefPanelSection from "../components/landing/ChefPanelSection";
 export default function Landing() {
   const { user } = useAuth();
 
-  // State Management for our three main data models
-  const [specials, setSpecials] = useState<any[]>([]);
-  const [chefs, setChefs] = useState<any[]>([]);
-  const [famousDishes, setFamousDishes] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const { data: specialsRes, isLoading: isLoadingSpecials, refetch: refetchSpecials } = useQuery({ 
+    queryKey: ['specials'], 
+    queryFn: menuApi.getSpecials 
+  });
+  
+  const { data: chefsRes, isLoading: isLoadingChefs } = useQuery({ 
+    queryKey: ['chefs'], 
+    queryFn: menuApi.getChefs 
+  });
+  
+  const { data: topRatedRes, isLoading: isLoadingTopRated, refetch: refetchTopRated } = useQuery({ 
+    queryKey: ['top-rated'], 
+    queryFn: menuApi.getTopRated 
+  });
 
-  // Extract fetch logic into a reusable function so child components can trigger a refresh after editing/deleting
+  const specials = specialsRes?.data || [];
+  const chefs = chefsRes?.data || [];
+  const famousDishes = topRatedRes?.data || [];
+  const isLoading = isLoadingSpecials || isLoadingChefs || isLoadingTopRated;
+
+  // Provide a refetch function to child components to trigger updates if they delete/modify
   const fetchData = () => {
-    setIsLoading(true);
-    Promise.all([
-      fetch(`${import.meta.env.VITE_API_URL}/api/v1/menu/specials`).then(res => res.json()),
-      fetch(`${import.meta.env.VITE_API_URL}/api/v1/chefs`).then(res => res.json()),
-      fetch(`${import.meta.env.VITE_API_URL}/api/v1/menu/top-rated`).then(res => res.json())
-    ])
-    .then(([specialsData, chefsData, topRatedData]) => {
-      if (specialsData.success && specialsData.data) setSpecials(specialsData.data);
-      if (chefsData.success && chefsData.data) setChefs(chefsData.data);
-      if (topRatedData.success && topRatedData.data) {
-        setFamousDishes(topRatedData.data);
-      }
-    })
-    .catch((err) => console.error("Error fetching landing data:", err))
-    .finally(() => {
-      setIsLoading(false);
-    });
+    refetchSpecials();
+    refetchTopRated();
   };
 
   const location = useLocation();
-
-  // Fetch data on initial mount
-  useEffect(() => {
-    fetchData();
-  }, []);
 
   // Handle scrolling when navigating from another page with a target section in state
   useEffect(() => {

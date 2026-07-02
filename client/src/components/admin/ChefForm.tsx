@@ -7,6 +7,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '../../context/ToastContext';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { adminApi } from '../../api';
 
 type ChefFormValues = {
   name: string;
@@ -26,6 +28,7 @@ export default function ChefForm({ initialData, isEditMode, onSuccess }: ChefFor
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(initialData?.photoUrl || null);
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const {
     register,
@@ -69,26 +72,13 @@ export default function ChefForm({ initialData, isEditMode, onSuccess }: ChefFor
     }
   };
 
-  const onSubmit = async (data: ChefFormValues) => {
-    try {
+  const chefMutation = useMutation({
+    mutationFn: async (data: ChefFormValues) => {
       let finalPhotoUrl = data.photoUrl;
 
       // 1. Upload photo if a new file is selected
       if (selectedFile) {
-        const formData = new FormData();
-        formData.append('photo', selectedFile);
-
-        const uploadRes = await fetch(`${import.meta.env.VITE_API_URL}/api/v1/admin/upload`, {
-          method: 'POST',
-          body: formData,
-          credentials: 'include',
-        });
-
-        if (!uploadRes.ok) {
-          throw new Error('Failed to upload photo');
-        }
-        
-        const uploadData = await uploadRes.json();
+        const uploadData = await adminApi.uploadFile(selectedFile);
         finalPhotoUrl = uploadData.data.photoUrl;
       } else if (!finalPhotoUrl) {
         throw new Error('Please select a photo to upload');
@@ -101,35 +91,29 @@ export default function ChefForm({ initialData, isEditMode, onSuccess }: ChefFor
         specialties: data.specialties ? data.specialties.split(',').map((s) => s.trim()) : [],
       };
 
-      const url = isEditMode && initialData?._id 
-        ? `${import.meta.env.VITE_API_URL}/api/v1/admin/chefs/${initialData._id}` 
-        : `${import.meta.env.VITE_API_URL}/api/v1/admin/chefs`;
-      const method = isEditMode ? 'PUT' : 'POST';
-
-      const res = await fetch(url, {
-        method,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-        body: JSON.stringify(payload),
-      });
-
-      if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.message || `Failed to ${isEditMode ? 'update' : 'create'} chef`);
+      if (isEditMode && initialData?._id) {
+        return adminApi.updateChef(initialData._id, payload);
+      } else {
+        return adminApi.createChef(payload);
       }
-
+    },
+    onSuccess: () => {
       toast.success(`Chef ${isEditMode ? 'updated' : 'added'} successfully!`);
+      queryClient.invalidateQueries({ queryKey: ['chefs'] });
       if (!isEditMode) {
         reset();
         setPreviewUrl(null);
         setSelectedFile(null);
       }
       if (onSuccess) onSuccess();
-    } catch (error: any) {
+    },
+    onError: (error: any) => {
       toast.error(error.message || `Failed to ${isEditMode ? 'update' : 'add'} chef`);
     }
+  });
+
+  const onSubmit = (data: ChefFormValues) => {
+    chefMutation.mutate(data);
   };
 
   return (

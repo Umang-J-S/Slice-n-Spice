@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { categorySchema } from '../../lib/validations/adminValidations';
@@ -6,6 +6,8 @@ import { useToast } from '../../context/ToastContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { adminApi } from '../../api';
 
 type CategoryFormValues = {
   name: string;
@@ -19,14 +21,14 @@ interface CategoryFormProps {
 }
 
 export default function CategoryForm({ initialData, isEditMode, onSuccess }: CategoryFormProps = {}) {
-  const [, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const {
     register,
     handleSubmit,
     reset,
-    formState: { errors, isSubmitting },
+    formState: { errors },
   } = useForm<CategoryFormValues>({
     resolver: yupResolver(categorySchema) as any,
     defaultValues: {
@@ -44,37 +46,28 @@ export default function CategoryForm({ initialData, isEditMode, onSuccess }: Cat
     }
   }, [initialData, reset]);
 
-  const onSubmit = async (data: CategoryFormValues) => {
-    setIsLoading(true);
-    try {
-      const url = isEditMode && initialData?._id 
-        ? `${import.meta.env.VITE_API_URL}/api/v1/admin/categories/${initialData._id}` 
-        : `${import.meta.env.VITE_API_URL}/api/v1/admin/categories`;
-      const method = isEditMode ? 'PUT' : 'POST';
-
-      const res = await fetch(url, {
-        method,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-        body: JSON.stringify(data),
-      });
-
-      if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.message || `Failed to ${isEditMode ? 'update' : 'create'} category`);
+  const categoryMutation = useMutation({
+    mutationFn: (data: CategoryFormValues) => {
+      if (isEditMode && initialData?._id) {
+        return adminApi.updateCategory(initialData._id, data);
+      } else {
+        return adminApi.createCategory(data);
       }
-
+    },
+    onSuccess: () => {
       toast.success(`Category ${isEditMode ? 'updated' : 'created'} successfully!`);
+      queryClient.invalidateQueries({ queryKey: ['menu', 'full'] });
       if (!isEditMode) reset();
       if (onSuccess) onSuccess();
-    } catch (error: any) {
+    },
+    onError: (error: any) => {
       console.error(error);
       toast.error(error.message || 'An error occurred');
-    } finally {
-      setIsLoading(false);
     }
+  });
+
+  const onSubmit = (data: CategoryFormValues) => {
+    categoryMutation.mutate(data);
   };
 
   return (
@@ -105,8 +98,8 @@ export default function CategoryForm({ initialData, isEditMode, onSuccess }: Cat
         )}
       </div>
 
-      <Button type="submit" disabled={isSubmitting} className="w-full rounded-xl bg-gradient-to-r from-amber-500 to-amber-400 hover:from-amber-400 hover:to-amber-300 text-black font-extrabold shadow-lg shadow-amber-500/20 py-6 text-lg transition-all hover:scale-[1.02] mt-4">
-        {isSubmitting ? 'Saving...' : isEditMode ? 'Update Category' : 'Add Category'}
+      <Button type="submit" disabled={categoryMutation.isPending} className="w-full rounded-xl bg-gradient-to-r from-amber-500 to-amber-400 hover:from-amber-400 hover:to-amber-300 text-black font-extrabold shadow-lg shadow-amber-500/20 py-6 text-lg transition-all hover:scale-[1.02] mt-4">
+        {categoryMutation.isPending ? 'Saving...' : isEditMode ? 'Update Category' : 'Add Category'}
       </Button>
     </form>
   );

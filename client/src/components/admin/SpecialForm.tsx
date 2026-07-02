@@ -13,6 +13,8 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useToast } from '../../context/ToastContext';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { menuApi, adminApi } from '../../api';
 
 type SpecialFormValues = {
   item: string;
@@ -26,9 +28,16 @@ interface SpecialFormProps {
 }
 
 export default function SpecialForm({ initialData, isEditMode, onSuccess }: SpecialFormProps = {}) {
-  const [items, setItems] = useState<any[]>([]);
   const [expirationOption, setExpirationOption] = useState<string>('24h');
   const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  const { data: menuData } = useQuery({
+    queryKey: ['menu', 'full'],
+    queryFn: menuApi.getFullMenu,
+  });
+
+  const items = menuData?.data ? menuData.data.reduce((acc: any[], cat: any) => [...acc, ...cat.items], []) : [];
 
   const getComputedExpiration = (opt: string) => {
     if (opt === 'always') return null;
@@ -66,57 +75,34 @@ export default function SpecialForm({ initialData, isEditMode, onSuccess }: Spec
     }
   }, [initialData, reset]);
 
-  useEffect(() => {
-    const fetchItems = async () => {
-      try {
-        const res = await fetch(`${import.meta.env.VITE_API_URL}/api/v1/menu/full`);
-        const data = await res.json();
-        if (data.success) {
-          let allItems: any[] = [];
-          data.data.forEach((cat: any) => {
-            allItems = [...allItems, ...cat.items];
-          });
-          setItems(allItems);
-        }
-      } catch (error) {
-        console.error('Failed to fetch items', error);
-      }
-    };
-    fetchItems();
-  }, []);
+  // Extracted logic to React Query above
 
-  const onSubmit = async (data: SpecialFormValues) => {
-    try {
+  const specialMutation = useMutation({
+    mutationFn: (data: SpecialFormValues) => {
       const submitData = {
         ...data,
         expiresAt: computedDate ? computedDate.toISOString() : null,
       };
 
-      const url = isEditMode && initialData?._id 
-        ? `${import.meta.env.VITE_API_URL}/api/v1/admin/specials/${initialData._id}` 
-        : `${import.meta.env.VITE_API_URL}/api/v1/admin/specials`;
-      const method = isEditMode ? 'PUT' : 'POST';
-
-      const res = await fetch(url, {
-        method,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-        body: JSON.stringify(submitData),
-      });
-
-      if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.message || `Failed to ${isEditMode ? 'update' : 'create'} special`);
+      if (isEditMode && initialData?._id) {
+        return adminApi.updateSpecial(initialData._id, submitData);
+      } else {
+        return adminApi.createSpecial(submitData);
       }
-
+    },
+    onSuccess: () => {
       toast.success(`Special ${isEditMode ? 'updated' : 'added'} successfully!`);
+      queryClient.invalidateQueries({ queryKey: ['specials'] });
       if (!isEditMode) reset();
       if (onSuccess) onSuccess();
-    } catch (error: any) {
+    },
+    onError: (error: any) => {
       toast.error(error.message || 'An error occurred');
     }
+  });
+
+  const onSubmit = (data: SpecialFormValues) => {
+    specialMutation.mutate(data);
   };
 
   return (
@@ -132,7 +118,7 @@ export default function SpecialForm({ initialData, isEditMode, onSuccess }: Spec
                 <SelectValue placeholder="Choose an item..." />
               </SelectTrigger>
               <SelectContent className="bg-neutral-950 border-white/10 text-white rounded-xl max-h-72 overflow-y-auto">
-                {items.map((it) => (
+                {items.map((it: any) => (
                   <SelectItem key={it._id} value={it._id} className="focus:bg-amber-500/20 focus:text-amber-300 cursor-pointer">
                     {it.title} (${it.price})
                   </SelectItem>

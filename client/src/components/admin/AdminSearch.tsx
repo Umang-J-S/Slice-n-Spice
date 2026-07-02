@@ -1,5 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useDebounce } from '../../hooks/useDebounce';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { adminApi } from '../../api';
 import { Input } from '@/components/ui/input';
 import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Search, Loader2, Utensils, ChefHat, Tag, Star, AlertCircle, Pencil, Trash2 } from 'lucide-react';
@@ -68,82 +70,57 @@ export default function AdminSearch() {
   const [query, setQuery] = useState('');
   const debouncedQuery = useDebounce(query, 500);
   const { toast } = useToast();
-  const [results, setResults] = useState<SearchResults>({
+  const queryClient = useQueryClient();
+
+  const { data: searchData, isLoading, error: queryError } = useQuery({
+    queryKey: ['admin', 'search', debouncedQuery],
+    queryFn: () => adminApi.search(debouncedQuery),
+    enabled: !!debouncedQuery.trim(),
+    retry: false,
+  });
+
+  const results: SearchResults = searchData?.success ? searchData.data : {
     categories: [],
     items: [],
     chefs: [],
     specials: [],
-  });
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  };
+
+  const error = queryError ? (queryError as Error).message : null;
+
   const [editingItem, setEditingItem] = useState<{type: 'category' | 'item' | 'special' | 'chef', data: any} | null>(null);
   const [itemToDelete, setItemToDelete] = useState<{ id: string, type: 'categories' | 'items' | 'specials' | 'chefs', name?: string } | null>(null);
-  const [isDeleting, setIsDeleting] = useState(false);
 
   const handleDeleteClick = (id: string, type: 'categories' | 'items' | 'specials' | 'chefs', name: string = 'this item') => {
     setItemToDelete({ id, type, name });
   };
 
-  const confirmDelete = async () => {
-    if (!itemToDelete) return;
-    const { id, type } = itemToDelete;
-    setIsDeleting(true);
-    
-    try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/v1/admin/${type}/${id}`, {
-        method: 'DELETE',
-        credentials: 'include'
-      });
-      if (!res.ok) throw new Error('Failed to delete');
-      
-      setResults(prev => ({
-        ...prev,
-        [type]: prev[type].filter((item: any) => item._id !== id)
-      }));
+  const deleteMutation = useMutation({
+    mutationFn: ({ id, type }: { id: string; type: 'categories' | 'items' | 'specials' | 'chefs' }) => {
+      if (type === 'categories') return adminApi.deleteCategory(id);
+      if (type === 'items') return adminApi.deleteItem(id);
+      if (type === 'specials') return adminApi.deleteSpecial(id);
+      if (type === 'chefs') return adminApi.deleteChef(id);
+      throw new Error('Invalid type');
+    },
+    onSuccess: (_, { type }) => {
       toast.success('Deleted successfully');
-    } catch (err: any) {
-      toast.error(err.message || 'Failed to delete');
-    } finally {
-      setIsDeleting(false);
+      queryClient.invalidateQueries({ queryKey: ['admin', 'search'] });
+      queryClient.invalidateQueries({ queryKey: ['menu', 'full'] });
+      if (type === 'specials') queryClient.invalidateQueries({ queryKey: ['specials'] });
+      if (type === 'chefs') queryClient.invalidateQueries({ queryKey: ['chefs'] });
+      if (type === 'items') queryClient.invalidateQueries({ queryKey: ['top-rated'] });
       setItemToDelete(null);
+    },
+    onError: (err: any) => {
+      toast.error(err.message || 'Failed to delete');
     }
+  });
+
+  const confirmDelete = () => {
+    if (!itemToDelete) return;
+    deleteMutation.mutate({ id: itemToDelete.id, type: itemToDelete.type });
   };
-
-  useEffect(() => {
-    const fetchResults = async () => {
-      if (!debouncedQuery.trim()) {
-        setResults({ categories: [], items: [], chefs: [], specials: [] });
-        return;
-      }
-
-      setIsLoading(true);
-      setError(null);
-
-      try {
-        const res = await fetch(`${import.meta.env.VITE_API_URL}/api/v1/admin/search?q=${encodeURIComponent(debouncedQuery)}`, {
-          method: 'GET',
-          credentials: 'include',
-        });
-
-        if (!res.ok) {
-          throw new Error('Failed to retrieve search results');
-        }
-
-        const data = await res.json();
-        if (data.success) {
-          setResults(data.data);
-        } else {
-          throw new Error(data.message || 'Something went wrong');
-        }
-      } catch (err: any) {
-        setError(err.message || 'An error occurred during search');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchResults();
-  }, [debouncedQuery]);
 
   const hasResults =
     results.categories.length > 0 ||
@@ -489,7 +466,7 @@ export default function AdminSearch() {
         onConfirm={confirmDelete}
         title={`Delete ${itemToDelete?.type === 'categories' ? 'Category' : itemToDelete?.type === 'specials' ? 'Special' : itemToDelete?.type === 'chefs' ? 'Chef' : 'Item'}`}
         description={`Are you sure you want to delete "${itemToDelete?.name}"? ${itemToDelete?.type === 'items' ? 'It will be hidden from the menu.' : 'This action cannot be undone.'}`}
-        isLoading={isDeleting}
+        isLoading={deleteMutation.isPending}
         confirmText="Delete"
       />
     </div>

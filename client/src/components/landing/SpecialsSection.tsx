@@ -5,6 +5,8 @@ import { optimizeCloudinaryUrl } from '../../lib/cloudinary';
 import ConfirmDialog from '../admin/ConfirmDialog';
 import SpecialEditModal from '../admin/SpecialEditModal';
 import { useToast } from '../../context/ToastContext';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { adminApi } from '../../api';
 
 interface SpecialsSectionProps {
   activeSpecials: any[];
@@ -29,30 +31,28 @@ interface SpecialsSectionProps {
 export default function SpecialsSection({ activeSpecials, isLoading, user, refreshMenu }: SpecialsSectionProps) {
   const [itemToDelete, setItemToDelete] = useState<any>(null);
   const [itemToEdit, setItemToEdit] = useState<any>(null);
-  const [isDeleting, setIsDeleting] = useState(false);
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const isAdmin = user?.role === 'admin';
 
-  const handleDelete = async () => {
-    if (!itemToDelete) return;
-    setIsDeleting(true);
-    try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/v1/admin/specials/${itemToDelete._id}`, {
-        method: 'DELETE',
-        credentials: 'include',
-      });
-      if (!res.ok) throw new Error('Failed to delete special');
-      
+  const deleteSpecialMutation = useMutation({
+    mutationFn: (id: string) => adminApi.deleteSpecial(id),
+    onSuccess: () => {
       setItemToDelete(null);
       toast.success('Special deleted successfully!');
+      queryClient.invalidateQueries({ queryKey: ['specials'] });
       if (refreshMenu) refreshMenu();
-    } catch (err: any) {
+    },
+    onError: (err: any) => {
       console.error('Error removing special', err);
       toast.error(err.message || 'Error deleting item');
-    } finally {
-      setIsDeleting(false);
     }
+  });
+
+  const handleDelete = () => {
+    if (!itemToDelete) return;
+    deleteSpecialMutation.mutate(itemToDelete._id);
   };
 
   return (
@@ -167,7 +167,7 @@ export default function SpecialsSection({ activeSpecials, isLoading, user, refre
         onConfirm={handleDelete}
         title="Remove Special"
         description={`Are you sure you want to remove "${itemToDelete?.item?.title || 'this item'}" from Today's Specials?`}
-        isLoading={isDeleting}
+        isLoading={deleteSpecialMutation.isPending}
         confirmText="Delete from Special"
       />
 

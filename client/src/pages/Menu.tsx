@@ -1,30 +1,23 @@
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { Helmet } from "react-helmet-async";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import DishCard from "../components/DishCard";
 import { UtensilsCrossed } from "lucide-react";
+import { useQuery } from '@tanstack/react-query';
+import { menuApi } from '../api';
 
 export default function Menu() {
-  const [categories, setCategories] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data: menuRes, isLoading: loading, refetch } = useQuery({
+    queryKey: ['menu', 'full'],
+    queryFn: menuApi.getFullMenu
+  });
+
+  const categories = menuRes?.data || [];
 
   useEffect(() => {
     // Scroll to top when page loads
     window.scrollTo(0, 0);
-
-    fetch(`${import.meta.env.VITE_API_URL}/api/v1/menu/full`)
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.success && data.data) {
-          setCategories(data.data);
-        }
-        setLoading(false);
-      })
-      .catch((err) => {
-        console.error(err);
-        setLoading(false);
-      });
   }, []);
 
   return (
@@ -85,7 +78,7 @@ export default function Menu() {
             </div>
           ) : (
             <div className="space-y-28">
-              {categories.map((category) => (
+              {categories.map((category: any) => (
                 <div key={category._id || category.name} className="animate-in fade-in duration-700">
                   {/* Category Header */}
                   <div className="flex flex-col items-center mb-12 space-y-3">
@@ -108,26 +101,8 @@ export default function Menu() {
                           image={dish.photoUrl}
                           rating={dish.avgRating}
                           reviewCount={dish.reviewCount}
-                          onReviewSuccess={() => {
-                            // Refetch the menu to update ratings
-                            fetch(`${import.meta.env.VITE_API_URL}/api/v1/menu/full`)
-                              .then((res) => res.json())
-                              .then((data) => {
-                                if (data.success && data.data) {
-                                  setCategories(data.data);
-                                }
-                              });
-                          }}
-                          onDeleteSuccess={() => {
-                            // Refetch the menu to remove deleted item
-                            fetch(`${import.meta.env.VITE_API_URL}/api/v1/menu/full`)
-                              .then((res) => res.json())
-                              .then((data) => {
-                                if (data.success && data.data) {
-                                  setCategories(data.data);
-                                }
-                              });
-                          }}
+                          onReviewSuccess={() => refetch()}
+                          onDeleteSuccess={() => refetch()}
                         />
                       ))
                     ) : (

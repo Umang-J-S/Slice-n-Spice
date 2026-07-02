@@ -1,4 +1,6 @@
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { authApi } from '../api';
 
 interface User {
   id: string;
@@ -18,41 +20,28 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
+
+  const { data, isLoading: loading, refetch } = useQuery({
+    queryKey: ['auth', 'current-user'],
+    queryFn: authApi.getCurrentUser,
+    retry: false, // Don't retry authentication checks
+  });
+
+  const user = data?.success && data?.user ? data.user : null;
 
   const checkAuth = async () => {
-    try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/v1/auth/current-user`, {
-        credentials: 'include'
-      });
-      const data = await res.json();
-      if (data.success && data.user) {
-        setUser(data.user);
-      } else {
-        setUser(null);
-      }
-    } catch (error) {
-      setUser(null);
-    } finally {
-      setLoading(false);
-    }
+    await refetch();
   };
 
   const logout = async () => {
     try {
-      await fetch(`${import.meta.env.VITE_API_URL}/api/v1/auth/logout`, {
-        credentials: 'include'
-      });
-      setUser(null);
+      await authApi.logout();
+      queryClient.setQueryData(['auth', 'current-user'], null);
     } catch (error) {
       console.error('Logout failed', error);
     }
   };
-
-  useEffect(() => {
-    checkAuth();
-  }, []);
 
   return (
     <AuthContext.Provider value={{ user, loading, logout, checkAuth }}>

@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { X, Star, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { menuApi } from '../api';
 interface ReviewModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -14,39 +15,42 @@ export default function ReviewModal({ isOpen, onClose, itemId, itemTitle, onSucc
   const [rating, setRating] = useState(0);
   const [hoverRating, setHoverRating] = useState(0);
   const [reviewText, setReviewText] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [isFetchingReview, setIsFetchingReview] = useState(false);
-  const [hasExistingReview, setHasExistingReview] = useState(false);
+  const queryClient = useQueryClient();
+
+  const { data: myReviewData, isLoading: isFetchingReview } = useQuery({
+    queryKey: ['reviews', itemId, 'me'],
+    queryFn: () => menuApi.getMyReview(itemId),
+    enabled: isOpen,
+    retry: false,
+  });
+
+  const hasExistingReview = myReviewData?.success && myReviewData?.data;
 
   useEffect(() => {
-    if (!isOpen) return;
+    if (hasExistingReview) {
+      setRating(myReviewData.data.rating);
+      setReviewText(myReviewData.data.reviewText || '');
+    } else if (isOpen) {
+      setRating(0);
+      setReviewText('');
+    }
+  }, [hasExistingReview, myReviewData, isOpen]);
 
-    const fetchMyReview = async () => {
-      setIsFetchingReview(true);
-      try {
-        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/v1/menu/items/${itemId}/reviews/me`, {
-          credentials: 'include'
-        });
-        const data = await response.json();
-        if (response.ok && data.success && data.data) {
-          setRating(data.data.rating);
-          setReviewText(data.data.reviewText || '');
-          setHasExistingReview(true);
-        } else {
-          setRating(0);
-          setReviewText('');
-          setHasExistingReview(false);
-        }
-      } catch (err) {
-        console.error("Error fetching review:", err);
-      } finally {
-        setIsFetchingReview(false);
-      }
-    };
-
-    fetchMyReview();
-  }, [isOpen, itemId]);
+  const submitReviewMutation = useMutation({
+    mutationFn: (data: { rating: number; reviewText: string }) => menuApi.submitReview(itemId, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['reviews', itemId] });
+      queryClient.invalidateQueries({ queryKey: ['menu', 'full'] });
+      queryClient.invalidateQueries({ queryKey: ['specials'] });
+      queryClient.invalidateQueries({ queryKey: ['top-rated'] });
+      onSuccess();
+      onClose();
+    },
+    onError: (err: any) => {
+      setError(err.message || 'Failed to submit review');
+    }
+  });
 
   if (!isOpen) return null;
 
@@ -58,31 +62,7 @@ export default function ReviewModal({ isOpen, onClose, itemId, itemTitle, onSucc
     }
     
     setError(null);
-    setIsSubmitting(true);
-
-    try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/v1/menu/items/${itemId}/reviews`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-        body: JSON.stringify({ rating, reviewText }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || 'Failed to submit review');
-      }
-
-      onSuccess();
-      onClose();
-    } catch (err: any) {
-      setError(err.message);
-    } finally {
-      setIsSubmitting(false);
-    }
+    submitReviewMutation.mutate({ rating, reviewText });
   };
 
   return (
@@ -166,10 +146,10 @@ export default function ReviewModal({ isOpen, onClose, itemId, itemTitle, onSucc
 
             <Button
               type="submit"
-              disabled={isSubmitting || rating === 0}
+              disabled={submitReviewMutation.isPending || rating === 0}
               className="w-full bg-amber-400 hover:bg-amber-500 text-black font-bold h-12 rounded-xl"
             >
-              {isSubmitting ? (
+              {submitReviewMutation.isPending ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   {hasExistingReview ? "Updating..." : "Submitting..."}

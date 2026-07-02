@@ -15,6 +15,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { menuApi, adminApi } from '../../api';
 
 type ItemFormValues = {
   title: string;
@@ -34,10 +36,17 @@ interface ItemFormProps {
 }
 
 export default function ItemForm({ initialData, isEditMode, onSuccess }: ItemFormProps = {}) {
-  const [categories, setCategories] = useState<any[]>([]);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(initialData?.photoUrl || null);
   const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  const { data: categoriesData } = useQuery({
+    queryKey: ['menu', 'full'],
+    queryFn: menuApi.getFullMenu,
+  });
+  
+  const categories = categoriesData?.data || [];
 
   const {
     register,
@@ -86,42 +95,13 @@ export default function ItemForm({ initialData, isEditMode, onSuccess }: ItemFor
     }
   };
 
-  useEffect(() => {
-    // Fetch categories for the dropdown
-    const fetchCategories = async () => {
-      try {
-        const res = await fetch(`${import.meta.env.VITE_API_URL}/api/v1/menu/full`);
-        const data = await res.json();
-        if (data.success) {
-          setCategories(data.data);
-        }
-      } catch (error) {
-        console.error('Failed to fetch categories', error);
-      }
-    };
-    fetchCategories();
-  }, []);
-
-  const onSubmit = async (data: ItemFormValues) => {
-    try {
+  const itemMutation = useMutation({
+    mutationFn: async (data: ItemFormValues) => {
       let finalPhotoUrl = data.photoUrl;
 
       // 1. Upload photo if a new file is selected
       if (selectedFile) {
-        const formData = new FormData();
-        formData.append('photo', selectedFile);
-
-        const uploadRes = await fetch(`${import.meta.env.VITE_API_URL}/api/v1/admin/upload`, {
-          method: 'POST',
-          body: formData,
-          credentials: 'include',
-        });
-
-        if (!uploadRes.ok) {
-          throw new Error('Failed to upload photo');
-        }
-        
-        const uploadData = await uploadRes.json();
+        const uploadData = await adminApi.uploadFile(selectedFile);
         finalPhotoUrl = uploadData.data.photoUrl;
       } else if (!finalPhotoUrl) {
         throw new Error('Please select a photo to upload');
@@ -141,31 +121,27 @@ export default function ItemForm({ initialData, isEditMode, onSuccess }: ItemFor
         }
       };
 
-      const url = isEditMode && initialData?._id 
-        ? `${import.meta.env.VITE_API_URL}/api/v1/admin/items/${initialData._id}` 
-        : `${import.meta.env.VITE_API_URL}/api/v1/admin/items`;
-      const method = isEditMode ? 'PUT' : 'POST';
-
-      const res = await fetch(url, {
-        method,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-        body: JSON.stringify(payload),
-      });
-
-      if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.message || `Failed to ${isEditMode ? 'update' : 'create'} item`);
+      if (isEditMode && initialData?._id) {
+        return adminApi.updateItem(initialData._id, payload);
+      } else {
+        return adminApi.createItem(payload);
       }
-
+    },
+    onSuccess: () => {
       toast.success(`Item ${isEditMode ? 'updated' : 'added'} successfully!`);
+      queryClient.invalidateQueries({ queryKey: ['menu', 'full'] });
+      queryClient.invalidateQueries({ queryKey: ['specials'] });
+      queryClient.invalidateQueries({ queryKey: ['top-rated'] });
       if (!isEditMode) reset();
       if (onSuccess) onSuccess();
-    } catch (error: any) {
-      toast.error(error.message);
+    },
+    onError: (error: any) => {
+      toast.error(error.message || `Failed to ${isEditMode ? 'update' : 'create'} item`);
     }
+  });
+
+  const onSubmit = (data: ItemFormValues) => {
+    itemMutation.mutate(data);
   };
 
   return (
@@ -224,7 +200,7 @@ export default function ItemForm({ initialData, isEditMode, onSuccess }: ItemFor
                   <SelectValue placeholder="Select a category" />
                 </SelectTrigger>
                 <SelectContent className="bg-neutral-950 border-white/10 text-white rounded-xl">
-                  {categories.map((cat) => (
+                  {categories.map((cat: any) => (
                     <SelectItem key={cat._id} value={cat._id} className="focus:bg-amber-500/20 focus:text-amber-300 cursor-pointer">
                       {cat.name}
                     </SelectItem>

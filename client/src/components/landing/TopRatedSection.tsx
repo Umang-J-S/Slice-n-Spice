@@ -7,6 +7,8 @@ import ItemEditModal from '../admin/ItemEditModal';
 import ReviewModal from '../ReviewModal';
 import { useToast } from '../../context/ToastContext';
 import { useNavigate } from 'react-router-dom';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { adminApi } from '../../api';
 
 interface TopRatedSectionProps {
   famousDishes: any[];
@@ -40,10 +42,10 @@ export default function TopRatedSection({ famousDishes, isLoading, user, refresh
   const isHoveredRef = useRef(false);
   const animationRef = useRef<number | null>(null);
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const [itemToDelete, setItemToDelete] = useState<any>(null);
   const [itemToEdit, setItemToEdit] = useState<any>(null);
-  const [isDeleting, setIsDeleting] = useState(false);
   const [itemToReview, setItemToReview] = useState<any>(null);
 
   const isAdmin = user?.role === 'admin';
@@ -130,25 +132,25 @@ export default function TopRatedSection({ famousDishes, isLoading, user, refresh
   const handleSliderTouchStart = () => setIsHovered(true);
   const handleSliderTouchEnd = () => setIsHovered(false);
 
-  const handleDelete = async () => {
-    if (!itemToDelete) return;
-    setIsDeleting(true);
-    try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/v1/admin/items/${itemToDelete._id}`, {
-        method: 'DELETE',
-        credentials: 'include',
-      });
-      if (!res.ok) throw new Error('Failed to delete item');
-      
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => adminApi.deleteItem(id),
+    onSuccess: () => {
       setItemToDelete(null);
       toast.success('Item deleted successfully!');
+      queryClient.invalidateQueries({ queryKey: ['menu', 'full'] });
+      queryClient.invalidateQueries({ queryKey: ['specials'] });
+      queryClient.invalidateQueries({ queryKey: ['top-rated'] });
       if (refreshMenu) refreshMenu();
-    } catch (err: any) {
+    },
+    onError: (err: any) => {
       console.error('Error deleting item', err);
       toast.error(err.message || 'Error deleting item');
-    } finally {
-      setIsDeleting(false);
     }
+  });
+
+  const handleDelete = () => {
+    if (!itemToDelete) return;
+    deleteMutation.mutate(itemToDelete._id);
   };
 
   return (
@@ -231,7 +233,7 @@ export default function TopRatedSection({ famousDishes, isLoading, user, refresh
                       <Edit2 className="w-4 h-4" />
                     </button>
                     <button 
-                      onClick={() => setItemToDelete(dish)}
+                      onClick={(e) => { e.stopPropagation(); setItemToDelete(dish); }}
                       className="p-2 bg-black/70 backdrop-blur-md rounded-full border border-red-500/30 text-red-500 hover:bg-red-500 hover:text-white transition-colors shadow-lg"
                       title="Delete Item"
                     >
@@ -255,7 +257,10 @@ export default function TopRatedSection({ famousDishes, isLoading, user, refresh
                 <div className="pt-3 border-t border-white/5 flex items-center justify-between mt-auto">
                   <span className="text-xs text-white/40">Signature dish</span>
                   <button 
-                    onClick={() => handleReviewClick(dish)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleReviewClick(dish);
+                    }}
                     className="flex items-center gap-1.5 text-xs font-bold text-amber-400 hover:text-black bg-amber-400/10 hover:bg-amber-400 px-3 py-1.5 rounded-full transition-all duration-300 shadow-[0_0_10px_rgba(251,191,36,0.1)] hover:shadow-[0_0_15px_rgba(251,191,36,0.4)]"
                   >
                     <MessageSquarePlus className="h-3.5 w-3.5" />
@@ -274,7 +279,7 @@ export default function TopRatedSection({ famousDishes, isLoading, user, refresh
         onConfirm={handleDelete}
         title="Delete Menu Item"
         description={`Are you sure you want to permanently delete "${itemToDelete?.title}"? This action cannot be undone.`}
-        isLoading={isDeleting}
+        isLoading={deleteMutation.isPending}
       />
 
       {itemToEdit && (

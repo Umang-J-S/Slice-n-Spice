@@ -84,24 +84,20 @@ export default function Navbar() {
           {user ? (
             <div className="flex items-center gap-3">
               <div
-                className="flex items-center gap-2 border border-white/10 bg-white/5 py-1 px-3 rounded-full cursor-pointer hover:bg-white/10 transition-colors"
-                onClick={() => navigate("/admin")}
-                title="Go to Admin Dashboard"
+                className="flex items-center gap-2 py-1 px-1 rounded-full"
+                title="User Profile"
               >
                 {user.photo ? (
                   <img
                     src={user.photo}
                     alt="Avatar"
-                    className="w-6 h-6 rounded-full object-cover border border-amber-400/50"
+                    className="w-8 h-8 rounded-full object-cover border border-amber-400/50"
                   />
                 ) : (
-                  <div className="w-6 h-6 rounded-full bg-amber-400/20 text-amber-400 flex items-center justify-center font-bold text-xs">
+                  <div className="w-8 h-8 rounded-full bg-amber-400/20 text-amber-400 flex items-center justify-center font-bold text-sm">
                     {user.displayName?.charAt(0) || user.email?.charAt(0)}
                   </div>
                 )}
-                <span className="text-xs font-semibold text-white/90">
-                  {user.displayName || user.email.split("@")[0]}
-                </span>
               </div>
               <Button
                 variant="ghost"
@@ -178,21 +174,19 @@ export default function Navbar() {
             {user ? (
               <div className="flex items-center justify-between">
                 <div
-                  className="flex items-center gap-2 cursor-pointer"
-                  onClick={() => navigate("/admin")}
+                  className="flex items-center gap-2"
                 >
                   {user.photo ? (
                     <img
                       src={user.photo}
                       alt="Avatar"
-                      className="w-7 h-7 rounded-full border border-amber-400"
+                      className="w-8 h-8 rounded-full border border-amber-400"
                     />
                   ) : (
-                    <div className="w-7 h-7 rounded-full bg-amber-400/20 text-amber-400 flex items-center justify-center font-bold text-xs">
+                    <div className="w-8 h-8 rounded-full bg-amber-400/20 text-amber-400 flex items-center justify-center font-bold text-sm">
                       {user.displayName?.charAt(0) || user.email?.charAt(0)}
                     </div>
                   )}
-                  <span className="text-sm font-semibold">{user.displayName || user.email}</span>
                 </div>
                 <Button
                   variant="ghost"

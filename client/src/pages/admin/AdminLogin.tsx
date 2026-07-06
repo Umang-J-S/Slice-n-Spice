@@ -31,7 +31,8 @@ export default function AdminLogin() {
   const handleGoogleLogin = () => {
     const duration = rememberMe ? "30" : "7";
     // Redirect to the backend Google OAuth endpoint
-    window.location.href = `${import.meta.env.VITE_API_URL}/api/v1/auth/google?keepLoggedIn=${duration}`;
+    const apiUrl = import.meta.env.VITE_API_URL || '';
+    window.location.href = `${apiUrl}/api/v1/auth/google?keepLoggedIn=${duration}`;
   };
 
   return (

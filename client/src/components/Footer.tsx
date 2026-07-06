@@ -38,23 +38,6 @@ const FacebookIcon = (props: React.SVGProps<SVGSVGElement>) => (
   </svg>
 );
 
-const TwitterIcon = (props: React.SVGProps<SVGSVGElement>) => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    width="24"
-    height="24"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    {...props}
-  >
-    <path d="M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.6 5.6 4.1 9 4-.9-4.2 4-6.6 7-3.8 1.1 0 3-1.2 3-1.2z" />
-  </svg>
-);
-
 export default function Footer() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -90,16 +73,15 @@ export default function Footer() {
           <p className="text-xs sm:text-sm text-white/50 leading-relaxed max-w-sm">
             Slice 'n Spice combines heritage cooking techniques, hand-stretched sourdough, and open
             flames to yield the perfect wood-fired dining experience.
+            <br/><br/>
+            <span className="text-amber-400 font-semibold uppercase tracking-wider">We cater for parties & events!</span>
           </p>
           <div className="flex items-center gap-3 pt-2">
-            <a href="#" className="p-2 rounded-full bg-white/5 border border-white/10 hover:bg-amber-400 hover:text-black transition-colors">
+            <a href="https://www.instagram.com/caribbeanslicenspice?igsh=dGk2dW9iYzhuN3Y2" target="_blank" rel="noopener noreferrer" title="@caribbeanslicenspice" className="p-2 rounded-full bg-white/5 border border-white/10 hover:bg-amber-400 hover:text-black transition-colors">
               <InstagramIcon className="h-4 w-4" />
             </a>
-            <a href="#" className="p-2 rounded-full bg-white/5 border border-white/10 hover:bg-amber-400 hover:text-black transition-colors">
+            <a href="https://www.facebook.com/caribbeanslicenspice" target="_blank" rel="noopener noreferrer" title="@caribbeanslicenspice" className="p-2 rounded-full bg-white/5 border border-white/10 hover:bg-amber-400 hover:text-black transition-colors">
               <FacebookIcon className="h-4 w-4" />
-            </a>
-            <a href="#" className="p-2 rounded-full bg-white/5 border border-white/10 hover:bg-amber-400 hover:text-black transition-colors">
-              <TwitterIcon className="h-4 w-4" />
             </a>
           </div>
         </div>
@@ -137,7 +119,7 @@ export default function Footer() {
             </li>
             <li className="flex items-center gap-2">
               <Phone className="h-4 w-4 text-amber-400 flex-shrink-0" />
-              <span className="text-white/60">+1 (555) 492-9102</span>
+              <span className="text-white/60">07930 633017</span>
             </li>
             <li className="flex items-center gap-2">
               <Mail className="h-4 w-4 text-amber-400 flex-shrink-0" />

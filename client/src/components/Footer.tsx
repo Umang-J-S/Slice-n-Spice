@@ -115,15 +115,15 @@ export default function Footer() {
           <ul className="space-y-3">
             <li className="flex items-start gap-2">
               <MapPin className="h-4 w-4 text-amber-400 flex-shrink-0 mt-0.5" />
-              <span className="text-white/60">104 Woodfired Alley, Gastronomy Plaza, NY 10013</span>
+              <span className="text-white/60">Barnet, London</span>
             </li>
             <li className="flex items-center gap-2">
               <Phone className="h-4 w-4 text-amber-400 flex-shrink-0" />
-              <span className="text-white/60">07930 633017</span>
+              <span className="text-white/60">+44 7930 633017</span>
             </li>
             <li className="flex items-center gap-2">
               <Mail className="h-4 w-4 text-amber-400 flex-shrink-0" />
-              <span className="text-white/60">reservations@slicenspice.com</span>
+              <span className="text-white/60">caribbeanslicenspice@gmail.com</span>
             </li>
           </ul>
         </div>

@@ -1,4 +1,4 @@
-import User from '../../../models/userModel';
+import User from '@/models/userModel';
 
 const adminEmails = (process.env.ADMIN_EMAILS || '')
   .split(',')

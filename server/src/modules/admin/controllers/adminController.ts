@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
-import { Category, Item, Special } from '../../../models/menuModel';
-import { Chef } from '../../../models/chefModel';
-import asyncHandler from '../../../utils/asyncHandler';
+import { Category, Item, Special } from '@/models/menuModel';
+import { Chef } from '@/models/chefModel';
+import asyncHandler from '@/utils/asyncHandler';
 
 /**
  * Controller to retrieve admin dashboard stats.

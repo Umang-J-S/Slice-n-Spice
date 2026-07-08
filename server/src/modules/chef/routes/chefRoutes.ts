@@ -1,5 +1,5 @@
 import express from 'express';
-import { getAllChefs, getChefById } from '../controllers/chefController';
+import { getAllChefs, getChefById } from '@/modules/chef/controllers/chefController';
 
 const router = express.Router();
 

@@ -8,8 +8,8 @@ import {
   addReview,
   getItemReviews,
   getMyReview
-} from '../controllers/menuController';
-import { isAuthenticated } from '../../auth/middlewares/authMiddleware';
+} from '@/modules/menu/controllers/menuController';
+import { isAuthenticated } from '@/modules/auth/middlewares/authMiddleware';
 
 const router = express.Router();
 

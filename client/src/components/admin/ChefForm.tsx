@@ -1,14 +1,14 @@
 import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
-import { chefSchema } from '../../lib/validations/adminValidations';
+import { chefSchema } from '@/lib/validations/adminValidations';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { useToast } from '../../context/ToastContext';
+import { useToast } from '@/context/ToastContext';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { adminApi } from '../../api';
+import { adminApi } from '@/api';
 
 type ChefFormValues = {
   name: string;

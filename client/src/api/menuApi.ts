@@ -1,4 +1,4 @@
-import { fetcher } from './apiClient';
+import { fetcher } from '@/api/apiClient';
 
 export const menuApi = {
   getFullMenu: () => fetcher('/api/v1/menu/full'),

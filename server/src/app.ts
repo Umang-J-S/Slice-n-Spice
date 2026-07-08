@@ -7,10 +7,10 @@ import helmet from 'helmet';
 import hpp from 'hpp';
 import compression from 'compression';
 import rateLimit from 'express-rate-limit';
-import { notFound, errorHandler } from './middlewares/errorMiddleware';
-import { buildApiRouter } from './routes';
-import { sessionStore } from './services/redis';
-import './services/passport';
+import { notFound, errorHandler } from '@/middlewares/errorMiddleware';
+import { buildApiRouter } from '@/routes';
+import { sessionStore } from '@/services/redis';
+import '@/services/passport';
 
 const app: Express = express();
 

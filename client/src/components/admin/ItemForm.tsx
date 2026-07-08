@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
-import { itemSchema } from '../../lib/validations/adminValidations';
-import { useToast } from '../../context/ToastContext';
+import { itemSchema } from '@/lib/validations/adminValidations';
+import { useToast } from '@/context/ToastContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -16,7 +16,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { menuApi, adminApi } from '../../api';
+import { menuApi, adminApi } from '@/api';
 
 type ItemFormValues = {
   title: string;

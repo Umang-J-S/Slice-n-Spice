@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
-import { Category, Item } from '../models/menuModel';
+import { Category, Item } from '@/models/menuModel';
 
 // Load environment variables from .env
 dotenv.config();

@@ -1,16 +1,16 @@
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useAuth } from "../../context/AuthContext";
-import CategoryForm from "../../components/admin/CategoryForm";
-import ItemForm from "../../components/admin/ItemForm";
-import ChefForm from "../../components/admin/ChefForm";
-import SpecialForm from "../../components/admin/SpecialForm";
-import AdminSearch from "../../components/admin/AdminSearch";
-import logo from "../../assets/logo.png";
+import { useAuth } from '@/context/AuthContext';
+import CategoryForm from '@/components/admin/CategoryForm';
+import ItemForm from '@/components/admin/ItemForm';
+import ChefForm from '@/components/admin/ChefForm';
+import SpecialForm from '@/components/admin/SpecialForm';
+import AdminSearch from '@/components/admin/AdminSearch';
+import logo from '@/assets/logo.png';
 import { Home } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
-import ConfirmDialog from "../../components/admin/ConfirmDialog";
+import ConfirmDialog from '@/components/admin/ConfirmDialog';
 
 export default function AdminDashboard() {
   const { user, logout } = useAuth();

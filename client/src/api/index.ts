@@ -1,3 +1,3 @@
-export * from './authApi';
-export * from './menuApi';
-export * from './adminApi';
+export * from '@/api/authApi';
+export * from '@/api/menuApi';
+export * from '@/api/adminApi';

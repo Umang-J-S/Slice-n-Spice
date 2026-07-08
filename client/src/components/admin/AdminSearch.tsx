@@ -1,17 +1,17 @@
 import { useState } from 'react';
-import { useDebounce } from '../../hooks/useDebounce';
+import { useDebounce } from '@/hooks/useDebounce';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { adminApi } from '../../api';
+import { adminApi } from '@/api';
 import { Input } from '@/components/ui/input';
 import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Search, Loader2, Utensils, ChefHat, Tag, Star, AlertCircle, Pencil, Trash2 } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import CategoryForm from './CategoryForm';
-import ItemForm from './ItemForm';
-import SpecialForm from './SpecialForm';
-import ChefForm from './ChefForm';
-import ConfirmDialog from './ConfirmDialog';
-import { useToast } from '../../context/ToastContext';
+import CategoryForm from '@/components/admin/CategoryForm';
+import ItemForm from '@/components/admin/ItemForm';
+import SpecialForm from '@/components/admin/SpecialForm';
+import ChefForm from '@/components/admin/ChefForm';
+import ConfirmDialog from '@/components/admin/ConfirmDialog';
+import { useToast } from '@/context/ToastContext';
 
 interface CategoryResult {
   _id: string;

@@ -1,13 +1,13 @@
 import { useState } from 'react';
 import { Star, ChevronRight, MessageSquarePlus, Trash2 } from 'lucide-react';
-import { optimizeCloudinaryUrl } from '../lib/cloudinary';
-import ReviewModal from './ReviewModal';
-import ConfirmDialog from './admin/ConfirmDialog';
-import { useAuth } from '../context/AuthContext';
+import { optimizeCloudinaryUrl } from '@/lib/cloudinary';
+import ReviewModal from '@/components/ReviewModal';
+import ConfirmDialog from '@/components/admin/ConfirmDialog';
+import { useAuth } from '@/context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { useToast } from '../context/ToastContext';
+import { useToast } from '@/context/ToastContext';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { adminApi } from '../api';
+import { adminApi } from '@/api';
 
 interface DishCardProps {
   _id?: string;

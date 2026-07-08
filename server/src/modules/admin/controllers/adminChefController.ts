@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
-import { Chef } from '../../../models/chefModel';
-import asyncHandler from '../../../utils/asyncHandler';
+import { Chef } from '@/models/chefModel';
+import asyncHandler from '@/utils/asyncHandler';
 
 /**
  * Controller to add a new chef.

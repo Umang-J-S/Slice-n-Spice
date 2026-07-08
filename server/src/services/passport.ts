@@ -1,7 +1,7 @@
 import passport from 'passport';
 import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
-import User from '../models/userModel';
-import { AuthService } from '../modules/auth/services/authService';
+import User from '@/models/userModel';
+import { AuthService } from '@/modules/auth/services/authService';
 
 console.log("PASSPORT INIT CLIENT ID:", process.env.GOOGLE_CLIENT_ID);
 passport.use(

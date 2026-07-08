@@ -1,6 +1,6 @@
 import { useNavigate, useLocation } from 'react-router-dom';
 import { MapPin, Phone, Mail } from 'lucide-react';
-import logo from '../assets/logo.png';
+import logo from '@/assets/logo.png';
 
 const InstagramIcon = (props: React.SVGProps<SVGSVGElement>) => (
   <svg

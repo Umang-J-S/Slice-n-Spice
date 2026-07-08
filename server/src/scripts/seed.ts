@@ -1,8 +1,8 @@
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
-import { Category, Item, Special, Review } from '../models/menuModel';
-import { Chef } from '../models/chefModel';
-import connectDB from '../config/db';
+import { Category, Item, Special, Review } from '@/models/menuModel';
+import { Chef } from '@/models/chefModel';
+import connectDB from '@/config/db';
 
 dotenv.config();
 

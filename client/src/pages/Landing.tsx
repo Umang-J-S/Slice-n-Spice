@@ -1,17 +1,17 @@
 import { useEffect } from "react";
 import { useLocation } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from '@/context/AuthContext';
 import { Helmet } from 'react-helmet-async';
 import { useQuery } from '@tanstack/react-query';
-import { menuApi } from '../api';
+import { menuApi } from '@/api';
 
 // Components
-import Navbar from "../components/Navbar";
-import Footer from "../components/Footer";
-import HeroSection from "../components/landing/HeroSection";
-import TopRatedSection from "../components/landing/TopRatedSection";
-import SpecialsSection from "../components/landing/SpecialsSection";
-import ChefPanelSection from "../components/landing/ChefPanelSection";
+import Navbar from '@/components/Navbar';
+import Footer from '@/components/Footer';
+import HeroSection from '@/components/landing/HeroSection';
+import TopRatedSection from '@/components/landing/TopRatedSection';
+import SpecialsSection from '@/components/landing/SpecialsSection';
+import ChefPanelSection from '@/components/landing/ChefPanelSection';
 
 /**
  * Landing Page Container Component

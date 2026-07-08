@@ -1,8 +1,8 @@
 import { useState, Suspense, lazy } from 'react'
 import { createBrowserRouter, RouterProvider } from 'react-router-dom'
-import { AuthProvider } from './context/AuthContext'
-import ProtectedRoute from './components/ProtectedRoute'
-import Preloader from './components/Preloader'
+import { AuthProvider } from '@/context/AuthContext'
+import ProtectedRoute from '@/components/ProtectedRoute'
+import Preloader from '@/components/Preloader'
 import { HelmetProvider } from 'react-helmet-async'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 
@@ -15,16 +15,16 @@ const queryClient = new QueryClient({
   },
 })
 
-import Landing from './pages/Landing'
-import Menu from './pages/Menu'
-import PrivacyPolicy from './pages/PrivacyPolicy'
-import TermsOfService from './pages/TermsOfService'
-import NotFound from './pages/NotFound'
+import Landing from '@/pages/Landing'
+import Menu from '@/pages/Menu'
+import PrivacyPolicy from '@/pages/PrivacyPolicy'
+import TermsOfService from '@/pages/TermsOfService'
+import NotFound from '@/pages/NotFound'
 const AdminLogin = lazy(() => import('./pages/admin/AdminLogin'))
 const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard'))
 import 'react-toastify/dist/ReactToastify.css'
 
-import { ToastProvider } from './context/ToastContext'
+import { ToastProvider } from '@/context/ToastContext'
 
 const router = createBrowserRouter([
   {

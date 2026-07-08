@@ -1,13 +1,13 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { useAuth } from "../../context/AuthContext";
+import { useAuth } from '@/context/AuthContext';
 import { Navigate, useNavigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import { useState } from "react";
 import { Label } from "@/components/ui/label";
-import logo from "../../assets/logo.png";
-import HeroSection from "../../components/landing/HeroSection";
-import Navbar from "../../components/Navbar";
+import logo from '@/assets/logo.png';
+import HeroSection from '@/components/landing/HeroSection';
+import Navbar from '@/components/Navbar';
 
 export default function AdminLogin() {
   const { user, loading } = useAuth();

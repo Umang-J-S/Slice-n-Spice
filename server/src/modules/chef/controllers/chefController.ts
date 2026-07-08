@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import mongoose from 'mongoose';
-import { Chef } from '../../../models/chefModel';
-import asyncHandler from '../../../utils/asyncHandler';
+import { Chef } from '@/models/chefModel';
+import asyncHandler from '@/utils/asyncHandler';
 
 /**
  * @desc    Get all chefs

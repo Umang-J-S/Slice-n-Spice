@@ -1,14 +1,14 @@
 import { useState, useEffect, useRef } from 'react';
 import { Star, Edit2, Trash2, MessageSquarePlus } from 'lucide-react';
-import halalLogo from '../../assets/halal_badge.png';
-import { optimizeCloudinaryUrl } from '../../lib/cloudinary';
-import ConfirmDialog from '../admin/ConfirmDialog';
-import ItemEditModal from '../admin/ItemEditModal';
-import ReviewModal from '../ReviewModal';
-import { useToast } from '../../context/ToastContext';
+import halalLogo from '@/assets/halal_badge.png';
+import { optimizeCloudinaryUrl } from '@/lib/cloudinary';
+import ConfirmDialog from '@/components/admin/ConfirmDialog';
+import ItemEditModal from '@/components/admin/ItemEditModal';
+import ReviewModal from '@/components/ReviewModal';
+import { useToast } from '@/context/ToastContext';
 import { useNavigate } from 'react-router-dom';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { adminApi } from '../../api';
+import { adminApi } from '@/api';
 
 interface TopRatedSectionProps {
   famousDishes: any[];

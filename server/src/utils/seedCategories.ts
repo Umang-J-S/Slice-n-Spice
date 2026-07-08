@@ -1,7 +1,7 @@
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
-import connectDB from '../config/db';
-import { Category } from '../models/menuModel';
+import connectDB from '@/config/db';
+import { Category } from '@/models/menuModel';
 
 // Load environment variables
 dotenv.config();

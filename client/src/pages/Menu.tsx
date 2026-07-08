@@ -1,11 +1,11 @@
 import { useEffect } from "react";
 import { Helmet } from "react-helmet-async";
-import Navbar from "../components/Navbar";
-import Footer from "../components/Footer";
-import DishCard from "../components/DishCard";
+import Navbar from '@/components/Navbar';
+import Footer from '@/components/Footer';
+import DishCard from '@/components/DishCard';
 import { UtensilsCrossed } from "lucide-react";
 import { useQuery } from '@tanstack/react-query';
-import { menuApi } from '../api';
+import { menuApi } from '@/api';
 
 export default function Menu() {
   const { data: menuRes, isLoading: loading, refetch } = useQuery({

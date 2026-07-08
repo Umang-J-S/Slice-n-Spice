@@ -4,7 +4,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import ItemForm from './ItemForm';
+import ItemForm from '@/components/admin/ItemForm';
 
 interface ItemEditModalProps {
   isOpen: boolean;

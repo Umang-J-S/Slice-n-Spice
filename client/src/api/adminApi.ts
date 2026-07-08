@@ -1,4 +1,4 @@
-import { fetcher } from './apiClient';
+import { fetcher } from '@/api/apiClient';
 
 export const adminApi = {
   // Items

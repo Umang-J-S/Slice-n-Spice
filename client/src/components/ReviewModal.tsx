@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { X, Star, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { menuApi } from '../api';
+import { menuApi } from '@/api';
 interface ReviewModalProps {
   isOpen: boolean;
   onClose: () => void;

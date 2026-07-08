@@ -1,12 +1,12 @@
 import { useState } from 'react';
 import { Edit2, Trash2 } from 'lucide-react';
-import halalLogo from '../../assets/halal_badge.png';
-import { optimizeCloudinaryUrl } from '../../lib/cloudinary';
-import ConfirmDialog from '../admin/ConfirmDialog';
-import SpecialEditModal from '../admin/SpecialEditModal';
-import { useToast } from '../../context/ToastContext';
+import halalLogo from '@/assets/halal_badge.png';
+import { optimizeCloudinaryUrl } from '@/lib/cloudinary';
+import ConfirmDialog from '@/components/admin/ConfirmDialog';
+import SpecialEditModal from '@/components/admin/SpecialEditModal';
+import { useToast } from '@/context/ToastContext';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { adminApi } from '../../api';
+import { adminApi } from '@/api';
 
 interface SpecialsSectionProps {
   activeSpecials: any[];

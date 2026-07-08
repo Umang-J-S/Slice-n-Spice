@@ -1,4 +1,4 @@
-import { fetcher } from './apiClient';
+import { fetcher } from '@/api/apiClient';
 
 export const authApi = {
   getCurrentUser: () => fetcher('/api/v1/auth/current-user'),

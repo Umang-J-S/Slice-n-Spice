@@ -1,8 +1,8 @@
 import { Request, Response } from 'express';
 import mongoose from 'mongoose';
-import { Category, Item, Special, Review } from '../../../models/menuModel';
-import asyncHandler from '../../../utils/asyncHandler';
-import { redisClient } from '../../../services/redis';
+import { Category, Item, Special, Review } from '@/models/menuModel';
+import asyncHandler from '@/utils/asyncHandler';
+import { redisClient } from '@/services/redis';
 
 /**
  * @desc    Get the full menu (categories with their respective items)

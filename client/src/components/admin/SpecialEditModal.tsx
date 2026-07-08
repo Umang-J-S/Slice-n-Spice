@@ -4,7 +4,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import SpecialForm from './SpecialForm';
+import SpecialForm from '@/components/admin/SpecialForm';
 
 interface SpecialEditModalProps {
   isOpen: boolean;

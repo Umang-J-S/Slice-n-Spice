@@ -1,13 +1,13 @@
 import express from 'express';
-import { getDashboardStats, addItem, addSpecial, updateSpecial, deleteSpecial, addCategory, updateItem, deleteItem, updateCategory, deleteCategory, globalSearch, uploadPhoto } from '../controllers/adminController';
-import { createChef, updateChef, deleteChef } from '../controllers/adminChefController';
-import { isAuthenticated, isAdmin } from '../../auth/middlewares/authMiddleware';
-import { validateRequest } from '../../../middlewares/validateRequest';
-import { addItemSchema, updateItemSchema } from '../validations/itemValidation';
-import { addSpecialSchema } from '../validations/specialValidation';
-import { addCategorySchema, updateCategorySchema } from '../validations/categoryValidation';
-import { createChefSchema, updateChefSchema } from '../validations/chefValidation';
-import { upload } from '../../../middlewares/uploadMiddleware';
+import { getDashboardStats, addItem, addSpecial, updateSpecial, deleteSpecial, addCategory, updateItem, deleteItem, updateCategory, deleteCategory, globalSearch, uploadPhoto } from '@/modules/admin/controllers/adminController';
+import { createChef, updateChef, deleteChef } from '@/modules/admin/controllers/adminChefController';
+import { isAuthenticated, isAdmin } from '@/modules/auth/middlewares/authMiddleware';
+import { validateRequest } from '@/middlewares/validateRequest';
+import { addItemSchema, updateItemSchema } from '@/modules/admin/validations/itemValidation';
+import { addSpecialSchema } from '@/modules/admin/validations/specialValidation';
+import { addCategorySchema, updateCategorySchema } from '@/modules/admin/validations/categoryValidation';
+import { createChefSchema, updateChefSchema } from '@/modules/admin/validations/chefValidation';
+import { upload } from '@/middlewares/uploadMiddleware';
 
 const router = express.Router();
 

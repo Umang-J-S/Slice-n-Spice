@@ -4,7 +4,7 @@ import { Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 // Assets
-import halalLogo from '../../assets/halal_badge.png'; // Using the transparent PNG logo
+import halalLogo from '@/assets/halal_badge.png'; // Using the transparent PNG logo
 
 interface HeroSectionProps {
   user: any; // We receive user from the parent component

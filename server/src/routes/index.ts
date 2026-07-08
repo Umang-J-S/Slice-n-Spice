@@ -1,8 +1,8 @@
 import { Router } from 'express';
-import authRoutes from '../modules/auth/routes/authRoutes';
-import adminRoutes from '../modules/admin/routes/adminRoutes';
-import menuRoutes from '../modules/menu/routes/menuRoutes';
-import chefRoutes from '../modules/chef/routes/chefRoutes';
+import authRoutes from '@/modules/auth/routes/authRoutes';
+import adminRoutes from '@/modules/admin/routes/adminRoutes';
+import menuRoutes from '@/modules/menu/routes/menuRoutes';
+import chefRoutes from '@/modules/chef/routes/chefRoutes';
 
 export function buildApiRouter(): Router {
   const router = Router();

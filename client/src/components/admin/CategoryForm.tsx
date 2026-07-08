@@ -1,13 +1,13 @@
 import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
-import { categorySchema } from '../../lib/validations/adminValidations';
-import { useToast } from '../../context/ToastContext';
+import { categorySchema } from '@/lib/validations/adminValidations';
+import { useToast } from '@/context/ToastContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { adminApi } from '../../api';
+import { adminApi } from '@/api';
 
 type CategoryFormValues = {
   name: string;

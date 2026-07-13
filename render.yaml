@@ -7,7 +7,7 @@ services:
     env: node
     plan: free
     rootDir: server
-    buildCommand: npm install && npm run build
+    buildCommand: npm install --include=dev && npm run build
     startCommand: npm start
     envVars:
       - key: NODE_ENV
@@ -19,15 +19,20 @@ services:
       - key: SESSION_SECRET
         generateValue: true
       - key: USE_REDIS
-        value: false
+        value: true
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: slicenspice-redis
+          property: connectionString
       - key: GOOGLE_CLIENT_ID
         sync: false
       - key: GOOGLE_CLIENT_SECRET
         sync: false
       - key: CLIENT_ORIGIN
-        value: https://slicenspice.onrender.com,https://slicenspice.co.uk
+        value: https://slicenspice.onrender.com,https://slicenspice.co.uk,https://www.slicenspice.co.uk
       - key: CLIENT_REDIRECT_URL
-        value: https://slicenspice.onrender.com/
+        value: https://slicenspice.co.uk/
       - key: CALLBACK_URL
         value: https://slicenspice-server.onrender.com/api/v1/auth/google/callback
       - key: CLOUDINARY_CLOUD_NAME
@@ -42,13 +47,21 @@ services:
         value: admin,user
 
   # ---------------------------------------------------------
+  # REDIS - Background Caching
+  # ---------------------------------------------------------
+  - type: redis
+    name: slicenspice-redis
+    plan: free
+    ipAllowList: [] # empty means only internal Render services can access this
+
+  # ---------------------------------------------------------
   # FRONTEND - React + Vite Static Site
   # ---------------------------------------------------------
   - type: web
     name: slicenspice
     env: static
     rootDir: client
-    buildCommand: npm install && npm run build
+    buildCommand: npm install --include=dev && npm run build
     staticPublishPath: dist
     routes:
       # Required for React Router SPA (redirect all traffic to index.html)

@@ -6,7 +6,7 @@ Slice 'n Spice is a modern, premium full-stack restaurant management platform an
 
 ## 🚀 Key Features
 
-*   **Google OAuth 2.0 Integration**: Secure user sign-in powered by Passport.js and Google APIs.
+*   **Google OAuth 2.0 Integration**: Secure user signin powered by Passport.js and Google APIs.
 *   **Session Persistence ("Remember Me")**: A custom-built switch toggle on login:
     *   **Toggled On**: Extends session lifetime to **30 Days**.
     *   **Toggled Off**: Defaults session lifetime to **7 Days**.

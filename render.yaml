@@ -30,9 +30,9 @@ services:
       - key: GOOGLE_CLIENT_SECRET
         sync: false
       - key: CLIENT_ORIGIN
-        value: https://slicenspice.onrender.com,https://slicenspice.co.uk,https://www.slicenspice.co.uk
+        value: https://slicenspice.onrender.com,https://caribbeanslicenspice.co.uk,https://www.caribbeanslicenspice.co.uk
       - key: CLIENT_REDIRECT_URL
-        value: https://slicenspice.co.uk/
+        value: https://caribbeanslicenspice.co.uk/
       - key: CALLBACK_URL
         value: https://slicenspice-server.onrender.com/api/v1/auth/google/callback
       - key: CLOUDINARY_CLOUD_NAME

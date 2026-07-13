@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { Category, Item, Special } from '@/models/menuModel';
 import { Chef } from '@/models/chefModel';
 import asyncHandler from '@/utils/asyncHandler';
+import { redisClient } from '@/services/redis';
 
 /**
  * Controller to retrieve admin dashboard stats.
@@ -39,6 +40,10 @@ export const addItem = asyncHandler(async (req: Request, res: Response) => {
 
   const savedItem = await newItem.save();
 
+  if (redisClient) {
+    await redisClient.del('menu:top-rated');
+  }
+
   res.status(201).json({
     success: true,
     message: 'Item added successfully',
@@ -58,6 +63,10 @@ export const updateItem = asyncHandler(async (req: Request, res: Response) => {
     throw new Error('Item not found');
   }
   
+  if (redisClient) {
+    await redisClient.del('menu:top-rated');
+  }
+
   res.status(200).json({
     success: true,
     message: 'Item updated successfully',
@@ -80,6 +89,10 @@ export const deleteItem = asyncHandler(async (req: Request, res: Response) => {
   // Clean up references
   await Special.updateMany({ item: id }, { isActive: false });
   
+  if (redisClient) {
+    await redisClient.del('menu:top-rated');
+  }
+
   res.status(200).json({
     success: true,
     message: 'Item deleted successfully',
@@ -213,6 +226,10 @@ export const deleteCategory = asyncHandler(async (req: Request, res: Response) =
   // Remove items in this category (soft delete)
   await Item.updateMany({ category: id }, { isDeleted: true });
   
+  if (redisClient) {
+    await redisClient.del('menu:top-rated');
+  }
+
   res.status(200).json({
     success: true,
     message: 'Category deleted successfully',
